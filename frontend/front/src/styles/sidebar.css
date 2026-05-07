@@ -1,0 +1,91 @@
+.sidebar {
+  width: 260px;
+  height: 100vh;
+
+  /* SAME DARK AUTH BACKGROUND STYLE */
+  background: linear-gradient(
+    to bottom,
+    rgba(0,0,0,0.92),
+    rgba(0,0,0,0.75)
+  );
+
+  color: white;
+
+  display: flex;
+  flex-direction: column;
+
+  padding: 20px;
+}
+
+/* LOGO AREA */
+.brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 15px;
+  margin-bottom: 30px;
+
+  background: rgba(255,255,255,0.08);
+  border-radius: 12px;
+
+  backdrop-filter: blur(10px);
+}
+
+.brand img {
+  width: 45px;
+}
+
+/* MENU CONTAINER */
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* BUTTON STYLE (REGISTER STYLE MATCH) */
+.menu button {
+  padding: 12px 15px;
+
+  border: none;
+  border-radius: 10px;
+
+  background: rgba(255,255,255,0.08);
+  color: white;
+
+  text-align: left;
+  font-size: 14px;
+
+  cursor: pointer;
+
+  transition: all 0.3s ease;
+}
+
+/* HOVER EFFECT (BLUE GLOW LIKE REGISTER BUTTON) */
+.menu button:hover {
+  background: #00b4ff;
+  color: white;
+
+  transform: translateX(6px);
+  box-shadow: 0 0 12px #00b4ff;
+}
+
+/* ACTIVE STATE (OPTIONAL) */
+.menu button.active {
+  background: #00b4ff;
+  box-shadow: 0 0 12px #00b4ff;
+}
+
+/* OPTIONAL FOOTER BUTTON */
+.logout {
+  margin-top: auto;
+  padding: 12px;
+
+  border: none;
+  border-radius: 10px;
+
+  background: red;
+  color: white;
+
+  cursor: pointer;
+}
