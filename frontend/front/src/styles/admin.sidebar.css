@@ -1,0 +1,261 @@
+/* =========================
+   ADMIN SIDEBAR
+========================= */
+
+.sidebar {
+  width: 260px;
+  height: 100vh;
+
+  position: relative;
+
+  /* SAME BACKGROUND */
+  background: url("../assets/auth-bg.jpeg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  display: flex;
+  flex-direction: column;
+
+  padding: 20px;
+
+  overflow: hidden;
+}
+
+/* DARK OVERLAY */
+
+.sidebar::before {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  background: rgba(0, 0, 0, 0.78);
+
+  z-index: 1;
+}
+
+/* CONTENT ABOVE OVERLAY */
+
+.sidebar > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* =========================
+   ADMIN BRAND
+========================= */
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 15px;
+  margin-bottom: 35px;
+
+  border-radius: 14px;
+
+  background: rgba(255,255,255,0.08);
+
+  backdrop-filter: blur(12px);
+}
+
+/* LOGO */
+
+.brand img {
+  width: 48px;
+  height: 48px;
+}
+
+/* TEXT */
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-text h2 {
+  font-size: 22px;
+  color: white;
+  margin: 0;
+}
+
+.brand-text p {
+  color: #b5c7ff;
+  font-size: 13px;
+  margin-top: 3px;
+}
+
+/* =========================
+   MENU
+========================= */
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* MENU ITEMS */
+
+.menu button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 14px 16px;
+
+  border: none;
+  border-radius: 12px;
+
+  background: rgba(255,255,255,0.08);
+
+  color: white;
+
+  text-align: left;
+
+  font-size: 15px;
+  font-weight: 500;
+
+  cursor: pointer;
+
+  transition: all 0.3s ease;
+}
+
+/* ICON */
+
+.menu button svg {
+  font-size: 17px;
+}
+
+/* HOVER */
+
+.menu button:hover {
+
+  background: linear-gradient(
+    135deg,
+    #2563eb,
+    #3b82f6
+  );
+
+  transform: translateX(6px);
+
+  box-shadow: 0 0 15px rgba(37,99,235,0.5);
+}
+
+/* ACTIVE */
+
+.menu button.active {
+
+  background: linear-gradient(
+    135deg,
+    #2563eb,
+    #3b82f6
+  );
+
+  box-shadow: 0 0 15px rgba(37,99,235,0.5);
+}
+
+/* =========================
+   ADMIN PROFILE
+========================= */
+
+.admin-profile {
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  margin-top: auto;
+  margin-bottom: 20px;
+
+  padding: 14px;
+
+  border-radius: 14px;
+
+  background: rgba(255,255,255,0.08);
+
+  backdrop-filter: blur(10px);
+}
+
+/* IMAGE */
+
+.admin-profile img {
+
+  width: 50px;
+  height: 50px;
+
+  border-radius: 50%;
+
+  object-fit: cover;
+}
+
+/* TEXT */
+
+.admin-profile h4 {
+  color: white;
+  margin: 0;
+  font-size: 15px;
+}
+
+.admin-profile p {
+  color: #b5c7ff;
+  font-size: 12px;
+  margin-top: 3px;
+}
+
+/* =========================
+   LOGOUT BUTTON
+========================= */
+
+.logout {
+
+  padding: 14px;
+
+  border: none;
+  border-radius: 12px;
+
+  background: rgba(255,0,0,0.85);
+
+  color: white;
+
+  font-size: 15px;
+  font-weight: bold;
+
+  cursor: pointer;
+
+  transition: 0.3s;
+}
+
+/* HOVER */
+
+.logout:hover {
+
+  background: red;
+
+  box-shadow: 0 0 12px rgba(255,0,0,0.6);
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 900px) {
+
+  .sidebar {
+    width: 90px;
+    padding: 15px;
+  }
+
+  .brand-text,
+  .menu button span,
+  .admin-profile div {
+    display: none;
+  }
+
+  .menu button {
+    justify-content: center;
+  }
+
+}

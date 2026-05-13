@@ -1,0 +1,125 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Segoe UI", sans-serif;
+}
+
+/* MAIN CONTAINER */
+.profile-container {
+  height: 100vh;
+  width: 100%;
+
+  position: relative;
+
+  background: url("../assets/auth-bg.jpeg") center/cover no-repeat;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* DARK OVERLAY */
+.profile-container::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: rgba(0,0,0,0.65);
+}
+
+/* PROFILE CARD (REGISTER STYLE) */
+.profile-card {
+  position: relative;
+  z-index: 2;
+
+  width: 380px;
+  padding: 30px;
+
+  background: white;
+  border-radius: 12px;
+
+  text-align: center;
+}
+
+/* AVATAR */
+.avatar {
+  width: 90px;
+  height: 90px;
+
+  margin: 0 auto 15px;
+
+  border-radius: 50%;
+
+  background: #00b4ff;
+  color: white;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  font-size: 40px;
+  font-weight: bold;
+}
+
+/* NAME */
+.profile-card h1 {
+  margin-bottom: 5px;
+  color: #111;
+}
+
+/* EMAIL */
+.profile-card .email {
+  font-size: 14px;
+  color: gray;
+  margin-bottom: 20px;
+}
+
+/* INFO SECTION */
+.info-box {
+  background: #f8fafc;
+
+  padding: 12px;
+  margin-bottom: 10px;
+
+  border-radius: 8px;
+
+  text-align: left;
+}
+
+/* LABEL */
+.info-box h3 {
+  font-size: 13px;
+  color: #555;
+
+  margin-bottom: 4px;
+}
+
+/* VALUE */
+.info-box p {
+  font-size: 14px;
+  color: #111;
+}
+
+/* BUTTON */
+.profile-btn {
+  width: 100%;
+  padding: 12px;
+
+  margin-top: 10px;
+
+  border: none;
+  border-radius: 8px;
+
+  background: #00b4ff;
+  color: white;
+
+  font-weight: bold;
+  cursor: pointer;
+
+  transition: 0.3s;
+}
+
+.profile-btn:hover {
+  box-shadow: 0 0 12px #00b4ff;
+}
