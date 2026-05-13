@@ -1,0 +1,113 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Segoe UI", sans-serif;
+}
+
+/* CONTAINER */
+.track-container {
+  min-height: 100vh;
+  width: 100%;
+
+  background: url("../assets/auth-bg.jpeg");
+  background-size: cover;
+  background-position: center;
+
+  position: relative;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  padding: 30px;
+}
+
+/* OVERLAY */
+.track-container::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: rgba(0,0,0,0.65);
+}
+
+/* CARD */
+.track-card {
+  position: relative;
+  z-index: 2;
+
+  width: 100%;
+  max-width: 850px;
+
+  background: white;
+
+  border-radius: 18px;
+
+  padding: 35px;
+}
+
+/* TITLE */
+.track-card h1 {
+  margin-bottom: 8px;
+}
+
+/* SUBTITLE */
+.subtitle {
+  color: gray;
+  margin-bottom: 25px;
+}
+
+/* STATUS LIST */
+.status-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* ITEM */
+.status-item {
+  background: #f8fafc;
+
+  padding: 18px;
+
+  border-radius: 12px;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  transition: 0.3s;
+}
+
+.status-item:hover {
+  transform: translateY(-3px);
+
+  box-shadow: 0 0 12px rgba(0,0,0,0.08);
+}
+
+/* BADGE */
+.badge {
+  padding: 8px 14px;
+
+  border-radius: 20px;
+
+  font-size: 13px;
+  font-weight: bold;
+}
+
+/* STATUS COLORS */
+.pending {
+  background: orange;
+  color: white;
+}
+
+.inprogress {
+  background: #00b4ff;
+  color: white;
+}
+
+.resolved {
+  background: green;
+  color: white;
+}

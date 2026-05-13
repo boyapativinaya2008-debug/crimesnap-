@@ -1,0 +1,233 @@
+/* =========================
+   AUTH PAGE MAIN CONTAINER
+========================= */
+
+.auth-container {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  overflow: hidden;
+  font-family: "Poppins", sans-serif;
+}
+
+/* =========================
+   BACKGROUND IMAGE
+========================= */
+
+.auth-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: brightness(0.45);
+  z-index: -2;
+}
+
+/* =========================
+   DARK OVERLAY
+========================= */
+
+.auth-container::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: -1;
+}
+
+/* =========================
+   LOGO
+========================= */
+
+.page-logo {
+  position: absolute;
+  top: 20px;
+  left: 40px;
+  z-index: 10;
+}
+
+.page-logo img {
+  width: 90px;
+  object-fit: contain;
+}
+
+/* =========================
+   LEFT SIDE
+========================= */
+
+.auth-left {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px;
+}
+
+.quote-box {
+  max-width: 500px;
+  color: white;
+}
+
+.quote-box h1 {
+  font-size: 52px;
+  line-height: 1.2;
+  margin-bottom: 15px;
+  font-weight: 700;
+}
+
+.quote-box p {
+  font-size: 18px;
+  line-height: 1.7;
+  opacity: 0.9;
+}
+
+/* =========================
+   RIGHT SIDE
+========================= */
+
+.auth-right {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+}
+
+/* =========================
+   LOGIN / REGISTER BOX
+========================= */
+
+.auth-box {
+  width: 100%;
+  max-width: 420px;
+  padding: 40px;
+  border-radius: 24px;
+  backdrop-filter: blur(18px);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+}
+
+.auth-box h2 {
+  color: white;
+  text-align: center;
+  margin-bottom: 30px;
+  font-size: 30px;
+  font-weight: 700;
+}
+
+/* =========================
+   INPUT GROUP
+========================= */
+
+.input-group {
+  position: relative;
+  margin-bottom: 22px;
+}
+
+.input-icon {
+  position: absolute;
+  top: 50%;
+  left: 16px;
+  transform: translateY(-50%);
+  color: #ddd;
+  font-size: 15px;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 14px 14px 14px 45px;
+  border-radius: 12px;
+  border: none;
+  outline: none;
+  background: rgba(255, 255, 255, 0.12);
+  color: white;
+  font-size: 15px;
+  transition: 0.3s;
+}
+
+.input-group input::placeholder {
+  color: #ddd;
+}
+
+.input-group input:focus {
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid #4da6ff;
+}
+
+/* =========================
+   BUTTON
+========================= */
+
+.auth-btn {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #4da6ff, #0066ff);
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.auth-btn:hover {
+  transform: translateY(-2px);
+  opacity: 0.95;
+}
+
+/* =========================
+   BOTTOM LINKS
+========================= */
+
+.auth-link {
+  text-align: center;
+  margin-top: 20px;
+  color: white;
+  font-size: 14px;
+}
+
+.auth-link a {
+  color: #4da6ff;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.auth-link a:hover {
+  text-decoration: underline;
+}
+
+/* =========================
+   RESPONSIVE DESIGN
+========================= */
+
+@media (max-width: 900px) {
+
+  .auth-container {
+    flex-direction: column;
+  }
+
+  .auth-left {
+    display: none;
+  }
+
+  .auth-right {
+    width: 100%;
+    padding: 20px;
+  }
+
+  .auth-box {
+    max-width: 100%;
+  }
+
+  .page-logo {
+    left: 20px;
+    top: 15px;
+  }
+
+  .page-logo img {
+    width: 70px;
+  }
+}
