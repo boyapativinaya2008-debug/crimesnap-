@@ -1,53 +1,68 @@
-const mongoose = require("mongoose");
+const mongoose =
+  require("mongoose");
 
 const complaintSchema =
-  new mongoose.Schema({
+  new mongoose.Schema(
+    {
 
-    title: {
-      type: String,
-      required: true
+      title: {
+        type: String,
+        required: true,
+      },
+
+      category: {
+        type: String,
+        required: true,
+      },
+
+      location: {
+        type: String,
+        required: true,
+      },
+
+      description: {
+        type: String,
+        required: true,
+      },
+
+      evidence: {
+        type: String,
+      },
+
+      status: {
+        type: String,
+        default: "Pending",
+      },
+
+      // ✅ ADD THIS
+
+      assignedOfficer: {
+        type: String,
+        default: "",
+      },
+
+      createdBy: {
+        type:
+          mongoose.Schema.Types
+            .ObjectId,
+        ref: "User",
+      },
+
+      assignedTo: {
+        type:
+          mongoose.Schema.Types
+            .ObjectId,
+        ref: "User",
+      },
+
     },
-
-    category: {
-      type: String,
-      required: true
-    },
-
-    location: {
-      type: String,
-      required: true
-    },
-
-    description: {
-      type: String,
-      required: true
-    },
-
-    evidence: {
-      type: String
-    },
-
-    status: {
-      type: String,
-      default: "Pending"
-    },
-
-    createdBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User"
-    },
-
-    assignedTo: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User"
+    {
+      timestamps: true,
     }
+  );
 
-  },
-  {
-    timestamps: true
-  });
-
-module.exports = mongoose.model(
-  "Complaint",
-  complaintSchema
-);
+module.exports =
+  mongoose.model(
+    "Complaint",
+    complaintSchema
+  );

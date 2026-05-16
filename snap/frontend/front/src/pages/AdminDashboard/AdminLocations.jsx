@@ -1,505 +1,150 @@
-// src/pages/AdminDashboard/AdminLocations.jsx
-
-import {
-  useEffect,
-  useState,
-} from "react";
-
-import API from "../../api/api";
+import { useState, useEffect } from "react";
+import axios from "axios";
+import "../../styles/adminreports.css";
 
 export default function AdminLocations() {
+  const [locations, setLocations] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const [locations, setLocations] =
-    useState([]);
+  // 🏁 Kept 'name' to align flawlessly with your backend req.body validation structure
+  const [name, setName] = useState(""); 
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("Andhra Pradesh");
+  const [pincode, setPincode] = useState("");
 
-  const [loading, setLoading] =
-    useState(false);
-
-  const [form, setForm] =
-    useState({
-      area: "",
-      city: "",
-      district: "",
-      state: "",
-      pincode: "",
-    });
-
+  /* ================= FETCH LOCATIONS ================= */
   useEffect(() => {
-    fetchLocations();
-  }, []);
-
-  /* FETCH LOCATIONS */
-
-  const fetchLocations =
-    async () => {
-
+    const fetchLocations = async () => {
       try {
-
-        const token =
-          localStorage.getItem(
-            "token"
-          );
-
-        const res =
-          await API.get(
-            "/locations",
-            {
-              headers: {
-                Authorization:
-                  `Bearer ${token}`,
-              },
-            }
-          );
-
-        setLocations(
-          res.data
-        );
-
-      } catch (err) {
-
-        console.log(err);
-
-        alert(
-          "Failed to fetch locations"
-        );
-      }
-    };
-
-  /* HANDLE INPUT */
-
-  const handleChange =
-    (e) => {
-
-      setForm({
-        ...form,
-        [e.target.name]:
-          e.target.value,
-      });
-    };
-
-  /* ADD LOCATION */
-
-  const handleSubmit =
-    async (e) => {
-
-      e.preventDefault();
-
-      try {
-
-        setLoading(true);
-
-        const token =
-          localStorage.getItem(
-            "token"
-          );
-
-        const res =
-          await API.post(
-            "/locations",
-            form,
-            {
-              headers: {
-                Authorization:
-                  `Bearer ${token}`,
-              },
-            }
-          );
-
-        alert(
-          res.data.msg
-        );
-
-        setForm({
-          area: "",
-          city: "",
-          district: "",
-          state: "",
-          pincode: "",
+        const token = localStorage.getItem("token");
+        const res = await axios.get("http://localhost:3000/api/admin/locations", {
+          headers: { Authorization: `Bearer ${token}` },
         });
-
-        fetchLocations();
-
+        setLocations(res.data);
       } catch (err) {
-
-        console.log(err);
-
-        alert(
-          err.response?.data?.msg ||
-          "Failed to add location"
-        );
-
+        console.error("Error fetching locations:", err);
       } finally {
-
         setLoading(false);
       }
     };
+    fetchLocations();
+  }, []);
 
-  /* DELETE LOCATION */
+  /* ================= ADD LOCATION FUNCTION ================= */
+  const handleAddLocation = async (e) => {
+    e.preventDefault();
+    try {
+      const token = localStorage.getItem("token");
+      
+      // Matches the destructuring assignment exactly: const { name, city, state, pincode } = req.body;
+      const newLocation = {
+        name: name.toLowerCase(), 
+        city: city.toUpperCase(), 
+        state,
+        pincode
+      };
 
-  const deleteLocation =
-    async (id) => {
+      const response = await axios.post(
+        "http://localhost:3000/api/admin/locations",
+        newLocation,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-      const confirmDelete =
-        window.confirm(
-          "Delete location?"
-        );
+      alert("Location Added Successfully!");
 
-      if (!confirmDelete)
-        return;
+      // Optimistic UI state appending matching database properties
+      const optimalAddedLocation = {
+        _id: response.data.id, // Your backend response sends the ID explicitly as 'id'
+        name: newLocation.name,
+        city: newLocation.city,
+        state: newLocation.state,
+        pincode: newLocation.pincode
+      };
 
-      try {
+      setLocations([optimalAddedLocation, ...locations]);
 
-        const token =
-          localStorage.getItem(
-            "token"
-          );
+      // Reset standard input elements
+      setName("");
+      setCity("");
+      setPincode("");
+    } catch (error) {
+      console.error(error);
+      alert(error.response?.data?.msg || "Failed to add location");
+    }
+  };
 
-        await API.delete(
-          `/locations/${id}`,
-          {
-            headers: {
-              Authorization:
-                `Bearer ${token}`,
-            },
-          }
-        );
-
-        alert(
-          "Location deleted"
-        );
-
-        fetchLocations();
-
-      } catch (err) {
-
-        console.log(err);
-
-        alert(
-          "Delete failed"
-        );
-      }
-    };
+  if (loading) return <h2>Loading location data...</h2>;
 
   return (
+    <div className="admin-page">
+      <h1>Crime Locations</h1>
 
-    <div
-      style={{
-        padding: "30px",
-        minHeight: "100vh",
-        background:
-          "linear-gradient(135deg,#0f172a,#1e293b,#334155)",
-      }}
-    >
-
-      <h1
-        style={{
-          fontSize: "40px",
-          fontWeight: "bold",
-          marginBottom: "30px",
-          color: "#fff",
-          textAlign: "center",
-        }}
-      >
-        📍 Locations Management
-      </h1>
-
-      {/* ADD LOCATION FORM */}
-
-      <form
-        onSubmit={
-          handleSubmit
-        }
-        style={{
-          background:
-            "rgba(255,255,255,0.1)",
-
-          backdropFilter:
-            "blur(10px)",
-
-          padding:
-            "25px",
-
-          borderRadius:
-            "20px",
-
-          marginBottom:
-            "35px",
-
-          display: "grid",
-
-          gap: "15px",
-
-          boxShadow:
-            "0 8px 25px rgba(0,0,0,0.3)",
-        }}
-      >
-
-        <input
-          type="text"
-          name="area"
-          placeholder="Area"
-          value={form.area}
-          onChange={
-            handleChange
-          }
-          required
-          style={inputStyle}
+      {/* ================= ADD LOCATION FORM ================= */}
+      <form onSubmit={handleAddLocation} className="add-location-form" style={{ marginBottom: "25px", display: "grid", gap: "10px", maxWidth: "400px" }}>
+        <h3>Add New Crime Location</h3>
+        
+        <input 
+          type="text" 
+          placeholder="Area Name" 
+          required 
+          value={name} 
+          onChange={(e) => setName(e.target.value)} 
         />
-
-        <input
-          type="text"
-          name="city"
-          placeholder="City"
-          value={form.city}
-          onChange={
-            handleChange
-          }
-          required
-          style={inputStyle}
+        <input 
+          type="text" 
+          placeholder="City (e.g., ANANTHAPUR)" 
+          required 
+          value={city} 
+          onChange={(e) => setCity(e.target.value)} 
         />
-
-        <input
-          type="text"
-          name="district"
-          placeholder="District"
-          value={
-            form.district
-          }
-          onChange={
-            handleChange
-          }
-          style={inputStyle}
+        <input 
+          type="text" 
+          placeholder="State (e.g., Andhra Pradesh)" 
+          required 
+          value={state} 
+          onChange={(e) => setState(e.target.value)} 
         />
-
-        <input
-          type="text"
-          name="state"
-          placeholder="State"
-          value={form.state}
-          onChange={
-            handleChange
-          }
-          style={inputStyle}
+        <input 
+          type="text" 
+          placeholder="Pincode (e.g., 515110)" 
+          required 
+          value={pincode} 
+          onChange={(e) => setPincode(e.target.value)} 
         />
-
-        <input
-          type="text"
-          name="pincode"
-          placeholder="Pincode"
-          value={
-            form.pincode
-          }
-          onChange={
-            handleChange
-          }
-          style={inputStyle}
-        />
-
-        <button
-          type="submit"
-          style={
-            buttonStyle
-          }
-        >
-          {
-            loading
-              ? "Adding..."
-              : "Add Location"
-          }
-        </button>
-
+        
+        <button type="submit" className="add-btn">Save Location</button>
       </form>
 
-      {/* LOCATIONS LIST */}
-
-      <div
-        style={{
-          display: "grid",
-          gap: "20px",
-        }}
-      >
-
-        {locations.length === 0 && (
-
-          <div
-            style={{
-              color: "#fff",
-              textAlign: "center",
-              fontSize: "20px",
-            }}
-          >
-            No locations found
-          </div>
-        )}
-
-        {locations.map(
-          (location) => (
-
-            <div
-              key={
-                location._id
-              }
-              style={{
-                background:
-                  "rgba(255,255,255,0.12)",
-
-                backdropFilter:
-                  "blur(10px)",
-
-                padding:
-                  "25px",
-
-                borderRadius:
-                  "18px",
-
-                color: "#fff",
-
-                boxShadow:
-                  "0 8px 20px rgba(0,0,0,0.3)",
-              }}
-            >
-
-              <h2
-                style={{
-                  fontSize:
-                    "26px",
-
-                  fontWeight:
-                    "700",
-
-                  marginBottom:
-                    "14px",
-                }}
-              >
-                {
-                  location.area
-                }
-              </h2>
-
-              <p>
-                <strong>
-                  City:
-                </strong>{" "}
-                {
-                  location.city
-                }
-              </p>
-
-              <p>
-                <strong>
-                  District:
-                </strong>{" "}
-                {
-                  location.district
-                }
-              </p>
-
-              <p>
-                <strong>
-                  State:
-                </strong>{" "}
-                {
-                  location.state
-                }
-              </p>
-
-              <p>
-                <strong>
-                  Pincode:
-                </strong>{" "}
-                {
-                  location.pincode
-                }
-              </p>
-
-              <button
-                onClick={() =>
-                  deleteLocation(
-                    location._id
-                  )
-                }
-                style={{
-                  marginTop:
-                    "18px",
-
-                  background:
-                    "#ef4444",
-
-                  color: "#fff",
-
-                  border: "none",
-
-                  padding:
-                    "12px 16px",
-
-                  borderRadius:
-                    "10px",
-
-                  cursor:
-                    "pointer",
-
-                  fontWeight:
-                    "600",
-                }}
-              >
-                Delete Location
-              </button>
-
-            </div>
-          )
-        )}
-
-      </div>
-
+      {/* ================= DATA TABLE ================= */}
+      <table className="admin-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Location/Area</th>
+            <th>City</th>
+            <th>State</th>
+            <th>Pincode</th>
+          </tr>
+        </thead>
+        <tbody>
+          {locations.length === 0 ? (
+            <tr>
+              <td colSpan="5" style={{ textAlign: "center" }}>No location data found</td>
+            </tr>
+          ) : (
+            locations.map((location, index) => (
+              <tr key={location._id || location.id}>
+                <td>{index + 1}</td> 
+                {/* 🔀 Fallback: read 'name' first; if old record has 'area', display it instead of blank or N/A */}
+                <td>{location.name || location.area || "N/A"}</td>
+                <td>{location.city || "N/A"}</td>
+                <td>{location.state || "N/A"}</td>
+                <td>{location.pincode || "N/A"}</td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
     </div>
   );
 }
-
-const inputStyle = {
-
-  padding:
-    "14px",
-
-  border:
-    "none",
-
-  borderRadius:
-    "10px",
-
-  fontSize:
-    "15px",
-
-  outline:
-    "none",
-
-  background:
-    "rgba(255,255,255,0.9)",
-};
-
-const buttonStyle = {
-
-  background:
-    "#2563eb",
-
-  color: "#fff",
-
-  border: "none",
-
-  padding:
-    "14px",
-
-  borderRadius:
-    "10px",
-
-  cursor:
-    "pointer",
-
-  fontWeight:
-    "700",
-
-  fontSize:
-    "16px",
-
-  transition:
-    "0.3s",
-};

@@ -1,125 +1,70 @@
-// src/pages/AdminDashboard/AdmindbLayout.jsx
+import { Link, Outlet } from "react-router-dom";
+import { useEffect, useState } from "react";
+import "../../styles/admindashboard.css";
+import logo from "../../assets/logo.png";
 
-import React from "react";
+export default function AdmindbLayout() {
+  const [admin, setAdmin] = useState(null);
 
-import {
-  Link,
-  Outlet,
-  useNavigate,
-} from "react-router-dom";
+  /* ================= LOAD ADMIN ================= */
+  useEffect(() => {
+    const user = localStorage.getItem("user");
 
-function AdminDbLayout() {
-  const navigate = useNavigate();
-
-  const logoutHandler = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-
-    navigate("/admin/login");
-  };
+    if (user) {
+      setAdmin(JSON.parse(user));
+    }
+  }, []);
 
   return (
-    <div
-      style={{
-        display: "flex",
-        minHeight: "100vh",
-      }}
-    >
+    <div className="admin-layout">
+
       {/* SIDEBAR */}
+      <div className="admin-sidebar">
 
-      <div
-        style={{
-          width: "250px",
-          background: "#111827",
-          color: "white",
-          padding: "20px",
-        }}
-      >
-        <h2>CivicSnap Admin</h2>
+        {/* TOP SECTION */}
+        <div className="sidebar-top">
 
-        <hr />
+          <div className="logo-box">
+            <img src={logo} alt="CrimeSnap Logo" />
+            <h2>CrimeSnap</h2>
+            
+          </div>
+<h3>ADMIN DASHBOARD</h3>
+          <div className="sidebar-menu">
 
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "15px",
-            marginTop: "20px",
-          }}
-        >
-          <Link
-            to="/admin/dashboard"
-            style={linkStyle}
-          >
-            Dashboard
-          </Link>
-
-          <Link
-            to="/admin/dashboard/reports"
-            style={linkStyle}
-          >
-            Reports
-          </Link>
-
-          <Link
-            to="/admin/dashboard/users"
-            style={linkStyle}
-          >
-            Users
-          </Link>
-
-          <Link
-            to="/admin/dashboard/officers"
-            style={linkStyle}
-          >
-            Officers
-          </Link>
-
-          <Link
-            to="/admin/dashboard/locations"
-            style={linkStyle}
-          >
-            Locations
-          </Link>
-
-          <button
-            onClick={logoutHandler}
-            style={{
-              padding: "10px",
-              border: "none",
-              background: "red",
-              color: "white",
-              cursor: "pointer",
-              borderRadius: "5px",
-              marginTop: "20px",
-            }}
-          >
-            Logout
-          </button>
+            <Link to="/admin/dashboard">📊 Dashboard</Link>
+            <Link to="/admin/reports">📋 Reports</Link>
+            <Link to="/admin/users">👤 Users</Link>
+            <Link to="/admin/update-status">🛠️ Update Status</Link>
+            <Link to="/admin/officers">👮 Officers</Link>
+            <Link to="/admin/locations">📍 Locations</Link>
+            <Link to="/">🚪 Logout</Link>
+          </div>
+        </div>
+        {/* ADMIN INFO */}
+        <div className="sidebar-bottom">
+          <div className="admin-user">
+            <h4>{admin?.name || "ADMIN USER"}</h4>
+            <p>
+              {admin?.role === "admin"
+                ? "Super Administrator"
+                : "User"}
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* PAGE CONTENT */}
+      {/* MAIN CONTENT */}
+      <div className="admin-main">
 
-      <div
-        style={{
-          flex: 1,
-          padding: "20px",
-          background: "#f3f4f6",
-        }}
-      >
+        <div className="admin-header">
+          <h1>HELLO {admin?.name || "ADMIN"} </h1>
+        </div>
+
         <Outlet />
+
       </div>
+
     </div>
   );
 }
-
-const linkStyle = {
-  color: "white",
-  textDecoration: "none",
-  padding: "10px",
-  background: "#1f2937",
-  borderRadius: "5px",
-};
-
-export default AdminDbLayout;

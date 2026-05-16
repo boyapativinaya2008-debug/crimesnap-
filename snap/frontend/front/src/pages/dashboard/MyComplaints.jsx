@@ -1,16 +1,32 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import {
+  useEffect,
+  useState,
+} from "react";
+
+import {
+  useNavigate,
+} from "react-router-dom";
+
 import axios from "axios";
 
 import "../../styles/mycomplaints.css";
+
 import bg from "../../assets/auth-bg.jpeg";
 
 export default function MyComplaints() {
 
-  const navigate = useNavigate();
+  const navigate =
+    useNavigate();
 
-  const [complaints, setComplaints] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [
+    complaints,
+    setComplaints,
+  ] = useState([]);
+
+  const [
+    loading,
+    setLoading,
+  ] = useState(true);
 
   useEffect(() => {
 
@@ -18,48 +34,68 @@ export default function MyComplaints() {
 
   }, []);
 
-  const fetchComplaints = async () => {
+  const fetchComplaints =
+    async () => {
 
-    try {
+      try {
 
-      const token = localStorage.getItem("token");
+        const token =
+          localStorage.getItem(
+            "token"
+          );
 
-      const res = await axios.get(
-        "http://localhost:3000/api/complaints/my",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+        const res =
+          await axios.get(
+            "http://localhost:3000/api/complaints/my",
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            }
+          );
 
-      console.log("Complaints:", res.data);
+        console.log(
+          "Complaints:",
+          res.data
+        );
 
-      // BACKEND RETURNS ARRAY DIRECTLY
-      setComplaints(res.data || []);
+        setComplaints(
+          res.data || []
+        );
 
-      setLoading(false);
+        setLoading(false);
 
-    } catch (err) {
+      } catch (err) {
 
-      console.log("FETCH ERROR:", err);
+        console.log(
+          "FETCH ERROR:",
+          err
+        );
 
-      setLoading(false);
-    }
-  };
+        setLoading(false);
+      }
+    };
 
-  const openDetails = (item) => {
+  const openDetails = (
+    item
+  ) => {
 
-    navigate("/complaint-details", {
-      state: item,
-    });
+    navigate(
+      "/complaint-details",
+      {
+        state: item,
+      }
+    );
   };
 
   return (
+
     <div
       className="mycomplaints-container"
       style={{
-        backgroundImage: `url(${bg})`,
+        backgroundImage:
+          `url(${bg})`,
       }}
     >
 
@@ -67,81 +103,152 @@ export default function MyComplaints() {
 
       <div className="mycomplaints-box">
 
-        <h2>📄 My Complaints</h2>
+        <h2>
+          📄 My Complaints
+        </h2>
 
         <p>
-          View all complaints submitted by you
+          View all complaints
+          submitted by you
         </p>
 
-        {/* HEADER */}
+        {/* ================= HEADER ================= */}
+
         <div className="list-header">
 
-          <span>Title</span>
+          <span>
+            Title
+          </span>
 
-          <span>Category</span>
+          <span>
+            Category
+          </span>
 
-          <span>Location</span>
+          <span>
+            Location
+          </span>
 
-          <span>Status</span>
+          <span>
+            Status
+          </span>
+
+          <span>
+            Assigned Officer
+          </span>
 
         </div>
 
-        {/* LOADING */}
+        {/* ================= LOADING ================= */}
+
         {loading && (
+
           <p
             style={{
-              marginTop: "20px",
-              textAlign: "center",
+              marginTop:
+                "20px",
+
+              textAlign:
+                "center",
             }}
           >
             Loading...
           </p>
+
         )}
 
-        {/* NO DATA */}
-        {!loading && complaints.length === 0 && (
-          <p
-            style={{
-              marginTop: "20px",
-              textAlign: "center",
-            }}
-          >
-            No complaints found
-          </p>
-        )}
+        {/* ================= NO DATA ================= */}
 
-        {/* COMPLAINT LIST */}
         {!loading &&
-          complaints.length > 0 &&
-          complaints.map((item) => (
+          complaints.length ===
+            0 && (
 
-            <div
-              key={item._id}
-              className="list-row clickable"
-              onClick={() => openDetails(item)}
+            <p
+              style={{
+                marginTop:
+                  "20px",
+
+                textAlign:
+                  "center",
+              }}
             >
+              No complaints
+              found
+            </p>
+          )}
 
-              <span>{item.title}</span>
+        {/* ================= COMPLAINT LIST ================= */}
 
-              <span>{item.category}</span>
+        {!loading &&
+          complaints.length >
+            0 &&
+          complaints.map(
+            (item) => (
 
-              <span>{item.location}</span>
-
-              <span
-                className={`status ${
-                  item.status === "Pending"
-                    ? "pending"
-                    : item.status === "In Progress"
-                    ? "inprogress"
-                    : "resolved"
-                }`}
+              <div
+                key={item._id}
+                className="list-row clickable"
+                onClick={() =>
+                  openDetails(
+                    item
+                  )
+                }
               >
-                {item.status}
-              </span>
 
-            </div>
-          ))}
+                {/* TITLE */}
+
+                <span>
+                  {item.title}
+                </span>
+
+                {/* CATEGORY */}
+
+                <span>
+                  {
+                    item.category
+                  }
+                </span>
+
+                {/* LOCATION */}
+
+                <span>
+                  {
+                    item.location
+                  }
+                </span>
+
+                {/* STATUS */}
+
+                <span
+                  className={`status ${
+                    item.status ===
+                    "Pending"
+                      ? "pending"
+                      : item.status ===
+                        "In Progress"
+                      ? "inprogress"
+                      : "resolved"
+                  }`}
+                >
+                  {item.status}
+                </span>
+
+                {/* ASSIGNED OFFICER */}
+
+                <span
+                  className="officer-name"
+                >
+
+                  {item.assignedOfficer ||
+                    "Not Assigned"}
+
+                </span>
+
+              </div>
+            )
+          )}
+
       </div>
+
     </div>
   );
 }

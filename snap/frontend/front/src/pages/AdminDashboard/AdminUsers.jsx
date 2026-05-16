@@ -20,7 +20,7 @@ export default function AdminUsers() {
             },
           }
         );
-
+        console.log("Data:", res.data);
         const uniqueUsers = [];
         const seen = new Set();
 

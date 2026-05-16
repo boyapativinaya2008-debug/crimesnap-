@@ -1,68 +1,110 @@
-const router = require("express").Router();
-const multer = require("multer");
+const router =
+  require("express").Router();
 
-const auth = require("../middleware/auth.middleware");
-const complaintController = require("../controllers/complaint.controller");
+const multer =
+  require("multer");
 
+const auth =
+  require(
+    "../middleware/auth.middleware"
+  );
+
+const complaintController =
+  require(
+    "../controllers/complaint.controller"
+  );
 
 // ===============================
-// MULTER CONFIG (FIXED)
+// MULTER CONFIG
 // ===============================
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads");
-  },
 
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + "-" + file.originalname);
-  }
-});
+const storage =
+  multer.diskStorage({
 
-const upload = multer({ storage });
+    destination: (
+      req,
+      file,
+      cb
+    ) => {
 
+      cb(
+        null,
+        "uploads"
+      );
+    },
+
+    filename: (
+      req,
+      file,
+      cb
+    ) => {
+
+      cb(
+        null,
+        Date.now() +
+          "-" +
+          file.originalname
+      );
+    },
+  });
+
+const upload =
+  multer({ storage });
 
 // ===============================
 // ROUTES
 // ===============================
 
 // CREATE COMPLAINT
+
 router.post(
   "/",
   auth,
-  upload.single("evidence"),
+  upload.single(
+    "evidence"
+  ),
   complaintController.createComplaint
 );
 
+// ===============================
+// GET ALL COMPLAINTS
+// ===============================
 
-// GET ALL COMPLAINTS (ADMIN)
 router.get(
   "/all",
   auth,
   complaintController.getAllComplaints
 );
 
+// ===============================
+// GET MY COMPLAINTS
+// ===============================
 
-// GET MY COMPLAINTS (USER)
 router.get(
   "/my",
   auth,
   complaintController.getMyComplaints
 );
 
+// ===============================
+// ASSIGN OFFICER
+// ===============================
 
-// ASSIGN COMPLAINT (ADMIN)
 router.put(
   "/assign/:id",
   auth,
   complaintController.assignComplaint
 );
 
+// ===============================
+// UPDATE STATUS
+// ===============================
 
-// UPDATE STATUS (ADMIN)
 router.put(
   "/status/:id",
   auth,
   complaintController.updateStatus
 );
 
-module.exports = router;
+module.exports =
+  router;

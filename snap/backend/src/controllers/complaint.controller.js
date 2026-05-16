@@ -1,179 +1,288 @@
-const Complaint = require("../models/complaint.model");
-
+const Complaint =
+  require(
+    "../models/complaint.model"
+  );
 
 // ===============================
 // CREATE COMPLAINT
 // ===============================
-exports.createComplaint = async (req, res) => {
 
-  try {
+exports.createComplaint =
+  async (req, res) => {
 
-    console.log("BODY:", req.body);
-    console.log("FILE:", req.file);
-    console.log("USER:", req.user);
+    try {
 
-    // 🔴 AUTH CHECK
-    if (!req.user) {
-      return res.status(401).json({
-        message: "Unauthorized - token missing"
-      });
+      console.log(
+        "BODY:",
+        req.body
+      );
+
+      console.log(
+        "FILE:",
+        req.file
+      );
+
+      console.log(
+        "USER:",
+        req.user
+      );
+
+      // AUTH CHECK
+
+      if (!req.user) {
+
+        return res
+          .status(401)
+          .json({
+            message:
+              "Unauthorized - token missing",
+          });
+      }
+
+      // VALIDATION
+
+      if (
+        !req.body.title ||
+        !req.body.category ||
+        !req.body.location ||
+        !req.body.description
+      ) {
+
+        return res
+          .status(400)
+          .json({
+            message:
+              "All fields are required",
+          });
+      }
+
+      const complaint =
+        await Complaint.create(
+          {
+            title:
+              req.body.title,
+
+            category:
+              req.body
+                .category,
+
+            location:
+              req.body
+                .location,
+
+            description:
+              req.body
+                .description,
+
+            evidence:
+              req.file
+                ? req.file
+                    .filename
+                : "",
+
+            createdBy:
+              req.user.id,
+
+            // ✅ DEFAULT OFFICER
+
+            assignedOfficer:
+              "Not Assigned",
+          }
+        );
+
+      return res
+        .status(201)
+        .json({
+          message:
+            "Complaint created successfully",
+          complaint,
+        });
+
+    } catch (err) {
+
+      console.log(
+        "🔥 CREATE ERROR:",
+        err
+      );
+
+      return res
+        .status(500)
+        .json({
+          error:
+            err.message,
+        });
     }
-
-    // 🔴 FIELD VALIDATION (important)
-    if (
-      !req.body.title ||
-      !req.body.category ||
-      !req.body.location ||
-      !req.body.description
-    ) {
-      return res.status(400).json({
-        message: "All fields are required"
-      });
-    }
-
-    const complaint = await Complaint.create({
-      title: req.body.title,
-      category: req.body.category,
-      location: req.body.location,
-      description: req.body.description,
-
-      // file safe handling
-      evidence: req.file ? req.file.filename : "",
-
-      createdBy: req.user.id
-    });
-
-    return res.status(201).json({
-      message: "Complaint created successfully",
-      complaint
-    });
-
-  } catch (err) {
-
-    console.log("🔥 CREATE ERROR:", err);
-
-    return res.status(500).json({
-      error: err.message
-    });
-  }
-};
-
+  };
 
 // ===============================
 // GET ALL COMPLAINTS
 // ===============================
-exports.getAllComplaints = async (req, res) => {
 
-  try {
+exports.getAllComplaints =
+  async (req, res) => {
 
-    const data = await Complaint.find()
+    try {
 
-      .populate("createdBy", "name email")
-      .populate("assignedTo", "name email")
-      .sort({ createdAt: -1 });
+      const data =
+        await Complaint.find()
 
-    res.json(data);
+          .populate(
+            "createdBy",
+            "name email"
+          )
 
-  } catch (err) {
+          .populate(
+            "assignedTo",
+            "name email"
+          )
 
-    console.log("GET ALL ERROR:", err);
+          .sort({
+            createdAt:
+              -1,
+          });
 
-    res.status(500).json({
-      error: err.message
-    });
-  }
-};
+      res.json(data);
 
+    } catch (err) {
+
+      console.log(
+        "GET ALL ERROR:",
+        err
+      );
+
+      res.status(500).json({
+        error:
+          err.message,
+      });
+    }
+  };
 
 // ===============================
 // GET MY COMPLAINTS
 // ===============================
-exports.getMyComplaints = async (req, res) => {
 
-  try {
+exports.getMyComplaints =
+  async (req, res) => {
 
-    if (!req.user) {
-      return res.status(401).json({
-        message: "Unauthorized"
+    try {
+
+      if (!req.user) {
+
+        return res
+          .status(401)
+          .json({
+            message:
+              "Unauthorized",
+          });
+      }
+
+      const data =
+        await Complaint.find(
+          {
+            createdBy:
+              req.user.id,
+          }
+        ).sort({
+          createdAt:
+            -1,
+        });
+
+      res.json(data);
+
+    } catch (err) {
+
+      console.log(
+        "GET MY ERROR:",
+        err
+      );
+
+      res.status(500).json({
+        error:
+          err.message,
       });
     }
-
-    const data = await Complaint.find({
-      createdBy: req.user.id
-    }).sort({ createdAt: -1 });
-
-    res.json(data);
-
-  } catch (err) {
-
-    console.log("GET MY ERROR:", err);
-
-    res.status(500).json({
-      error: err.message
-    });
-  }
-};
-
+  };
 
 // ===============================
 // ASSIGN COMPLAINT
 // ===============================
-exports.assignComplaint = async (req, res) => {
 
-  try {
+exports.assignComplaint =
+  async (req, res) => {
 
-    const updated = await Complaint.findByIdAndUpdate(
+    try {
 
-      req.params.id,
+      const updated =
+        await Complaint.findByIdAndUpdate(
 
-      {
-        assignedTo: req.body.assignedTo
-      },
+          req.params.id,
 
-      { new: true }
+          {
+            // ✅ SAVE OFFICER NAME
 
-    );
+            assignedOfficer:
+              req.body
+                .assignedOfficer,
+          },
 
-    res.json(updated);
+          {
+            new: true,
+          }
+        );
 
-  } catch (err) {
+      res.json(updated);
 
-    console.log("ASSIGN ERROR:", err);
+    } catch (err) {
 
-    res.status(500).json({
-      error: err.message
-    });
-  }
-};
+      console.log(
+        "ASSIGN ERROR:",
+        err
+      );
 
+      res.status(500).json({
+        error:
+          err.message,
+      });
+    }
+  };
 
 // ===============================
 // UPDATE STATUS
 // ===============================
-exports.updateStatus = async (req, res) => {
 
-  try {
+exports.updateStatus =
+  async (req, res) => {
 
-    const updated = await Complaint.findByIdAndUpdate(
+    try {
 
-      req.params.id,
+      const updated =
+        await Complaint.findByIdAndUpdate(
 
-      {
-        status: req.body.status
-      },
+          req.params.id,
 
-      { new: true }
+          {
+            status:
+              req.body
+                .status,
+          },
 
-    );
+          {
+            new: true,
+          }
+        );
 
-    res.json(updated);
+      res.json(updated);
 
-  } catch (err) {
+    } catch (err) {
 
-    console.log("STATUS ERROR:", err);
+      console.log(
+        "STATUS ERROR:",
+        err
+      );
 
-    res.status(500).json({
-      error: err.message
-    });
-  }
-};
+      res.status(500).json({
+        error:
+          err.message,
+      });
+    }
+  };

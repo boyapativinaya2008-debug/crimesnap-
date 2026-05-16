@@ -11,19 +11,20 @@ const {
   ObjectId,
 } = require("mongodb");
 
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
+const bcrypt =
+  require("bcryptjs");
 
-/* ───────────────── DNS ───────────────── */
+const jwt =
+  require("jsonwebtoken");
 
 dns.setServers([
   "8.8.8.8",
   "8.8.4.4",
 ]);
 
-/* ───────────────── APP ───────────────── */
-
 const app = express();
+
+/* ───────────────── MIDDLEWARE ───────────────── */
 
 app.use(cors());
 
@@ -39,34 +40,38 @@ app.use(
 const storage =
   multer.diskStorage({
 
-    destination:
-      (req, file, cb) => {
+    destination: (
+      req,
+      file,
+      cb
+    ) => {
 
-        cb(
-          null,
-          "uploads/"
-        );
-      },
+      cb(
+        null,
+        "uploads/"
+      );
+    },
 
-    filename:
-      (req, file, cb) => {
+    filename: (
+      req,
+      file,
+      cb
+    ) => {
 
-        cb(
-          null,
-          Date.now() +
-            path.extname(
-              file.originalname
-            )
-        );
-      },
+      cb(
+        null,
+        Date.now() +
+          path.extname(
+            file.originalname
+          )
+      );
+    },
   });
 
 const upload =
-  multer({
-    storage,
-  });
+  multer({ storage });
 
-/* ───────────────── DATABASE ───────────────── */
+/* ───────────────── DB ───────────────── */
 
 let db;
 
@@ -78,11 +83,7 @@ const connectDB =
       const client =
         new MongoClient(
           process.env
-            .Mongo_DB_URI ||
-          process.env
-            .MONGO_DB_URI ||
-          process.env
-            .MONGO_URI
+            .MONGO_DB_URI
         );
 
       await client.connect();
@@ -98,16 +99,13 @@ const connectDB =
 
     } catch (err) {
 
-      console.log(
-        "❌ DB Error:",
-        err.message
-      );
+      console.log(err);
 
       process.exit(1);
     }
   };
 
-/* ───────────────── AUTH MIDDLEWARE ───────────────── */
+/* ───────────────── AUTH ───────────────── */
 
 const protect = (
   req,
@@ -116,7 +114,8 @@ const protect = (
 ) => {
 
   const authHeader =
-    req.headers.authorization;
+    req.headers
+      .authorization;
 
   if (
     !authHeader ||
@@ -135,21 +134,17 @@ const protect = (
 
   try {
 
-    const token =
-      authHeader.split(
-        " "
-      )[1];
-
     const decoded =
       jwt.verify(
-        token,
+        authHeader.split(
+          " "
+        )[1],
         process.env
           .JWT_SECRET ||
           "secret123"
       );
 
-    req.user =
-      decoded;
+    req.user = decoded;
 
     next();
 
@@ -162,7 +157,7 @@ const protect = (
   }
 };
 
-/* ───────────────── ADMIN MIDDLEWARE ───────────────── */
+/* ───────────────── ADMIN ───────────────── */
 
 const verifyAdmin = (
   req,
@@ -200,9 +195,7 @@ app.post(
         phone,
         password,
         confirmPassword,
-        agree,
         role,
-        adminCode,
       } = req.body;
 
       if (
@@ -233,16 +226,6 @@ app.post(
           });
       }
 
-      if (!agree) {
-
-        return res
-          .status(400)
-          .json({
-            msg:
-              "Accept terms & conditions",
-          });
-      }
-
       const users =
         db.collection(
           "users"
@@ -264,57 +247,41 @@ app.post(
           });
       }
 
-      const requestedRole =
-        role === "admin"
-          ? "admin"
-          : "user";
-
-      // ADMIN CODE CHECK
-
-      if (
-        requestedRole ===
-        "admin"
-      ) {
-
-        if (
-          adminCode !==
-          process.env
-            .ADMIN_REGISTRATION_CODE
-        ) {
-
-          return res
-            .status(403)
-            .json({
-              msg:
-                "Invalid admin code",
-            });
-        }
-      }
-
-      // HASH PASSWORD
-
       const hashedPassword =
         await bcrypt.hash(
           password,
           10
         );
 
+      const requestedRole =
+        role === "admin"
+          ? "admin"
+          : "user";
+
       const result =
-        await users.insertOne({
-          name,
-          email:
-            email.toLowerCase(),
-          phone:
-            phone || "",
-          password:
-            hashedPassword,
-          role:
-            requestedRole,
-          status:
-            "Active",
-          createdAt:
-            new Date(),
-        });
+        await users.insertOne(
+          {
+            name,
+
+            email:
+              email.toLowerCase(),
+
+            phone:
+              phone || "",
+
+            password:
+              hashedPassword,
+
+            role:
+              requestedRole,
+
+            status:
+              "Active",
+
+            createdAt:
+              new Date(),
+          }
+        );
 
       res.status(201).json({
         msg:
@@ -323,9 +290,12 @@ app.post(
         user: {
           id:
             result.insertedId,
+
           name,
+
           email:
             email.toLowerCase(),
+
           role:
             requestedRole,
         },
@@ -357,19 +327,6 @@ app.post(
         role,
       } = req.body;
 
-      if (
-        !email ||
-        !password
-      ) {
-
-        return res
-          .status(400)
-          .json({
-            msg:
-              "Email and password required",
-          });
-      }
-
       const users =
         db.collection(
           "users"
@@ -390,8 +347,6 @@ app.post(
               "Invalid email or password",
           });
       }
-
-      // BLOCK CHECK
 
       if (
         user.status ===
@@ -424,8 +379,6 @@ app.post(
           });
       }
 
-      // PASSWORD CHECK
-
       const isMatch =
         await bcrypt.compare(
           password,
@@ -442,19 +395,23 @@ app.post(
           });
       }
 
-      // TOKEN
-
       const token =
         jwt.sign(
           {
             id:
               user._id.toString(),
+
             role:
               user.role,
+
+            name:
+              user.name,
           },
+
           process.env
             .JWT_SECRET ||
             "secret123",
+
           {
             expiresIn:
               "7d",
@@ -470,228 +427,16 @@ app.post(
         user: {
           id:
             user._id,
+
           name:
             user.name,
+
           email:
             user.email,
+
           role:
             user.role,
-          status:
-            user.status,
         },
-      });
-
-    } catch (err) {
-
-      console.log(err);
-
-      res.status(500).json({
-        msg:
-          "Server Error",
-      });
-    }
-  }
-);
-
-/* ───────────────── GET USER ───────────────── */
-
-app.get(
-  "/api/auth/me",
-  protect,
-  async (req, res) => {
-
-    try {
-
-      const users =
-        db.collection(
-          "users"
-        );
-
-      const user =
-        await users.findOne(
-          {
-            _id:
-              new ObjectId(
-                req.user.id
-              ),
-          },
-          {
-            projection: {
-              password: 0,
-            },
-          }
-        );
-
-      res.status(200).json(
-        user
-      );
-
-    } catch (err) {
-
-      res.status(500).json({
-        msg:
-          err.message,
-      });
-    }
-  }
-);
-
-/* ───────────────── GET ALL USERS ───────────────── */
-
-app.get(
-  "/api/users",
-  protect,
-  verifyAdmin,
-  async (req, res) => {
-
-    try {
-
-      const users =
-        await db
-          .collection(
-            "users"
-          )
-          .find(
-            {},
-            {
-              projection: {
-                password: 0,
-              },
-            }
-          )
-          .sort({
-            createdAt: -1,
-          })
-          .toArray();
-
-      res.status(200).json(
-        users
-      );
-
-    } catch (err) {
-
-      res.status(500).json({
-        msg:
-          err.message,
-      });
-    }
-  }
-);
-
-/* ───────────────── DELETE USER ───────────────── */
-
-app.delete(
-  "/api/users/:id",
-  protect,
-  verifyAdmin,
-  async (req, res) => {
-
-    try {
-
-      await db
-        .collection(
-          "users"
-        )
-        .deleteOne({
-          _id:
-            new ObjectId(
-              req.params.id
-            ),
-        });
-
-      res.status(200).json({
-        msg:
-          "User deleted successfully",
-      });
-
-    } catch (err) {
-
-      res.status(500).json({
-        msg:
-          err.message,
-      });
-    }
-  }
-);
-
-/* ───────────────── BLOCK USER ───────────────── */
-
-app.put(
-  "/api/admin/users/block/:id",
-  protect,
-  verifyAdmin,
-  async (req, res) => {
-
-    try {
-
-      await db
-        .collection(
-          "users"
-        )
-        .updateOne(
-          {
-            _id:
-              new ObjectId(
-                req.params.id
-              ),
-          },
-          {
-            $set: {
-              status:
-                "Blocked",
-            },
-          }
-        );
-
-      res.status(200).json({
-        msg:
-          "User blocked successfully",
-      });
-
-    } catch (err) {
-
-      console.log(err);
-
-      res.status(500).json({
-        msg:
-          "Server Error",
-      });
-    }
-  }
-);
-
-/* ───────────────── UNBLOCK USER ───────────────── */
-
-app.put(
-  "/api/admin/users/unblock/:id",
-  protect,
-  verifyAdmin,
-  async (req, res) => {
-
-    try {
-
-      await db
-        .collection(
-          "users"
-        )
-        .updateOne(
-          {
-            _id:
-              new ObjectId(
-                req.params.id
-              ),
-          },
-          {
-            $set: {
-              status:
-                "Active",
-            },
-          }
-        );
-
-      res.status(200).json({
-        msg:
-          "User unblocked successfully",
       });
 
     } catch (err) {
@@ -711,7 +456,9 @@ app.put(
 app.post(
   "/api/complaints",
   protect,
-  upload.single("image"),
+  upload.single(
+    "image"
+  ),
   async (req, res) => {
 
     try {
@@ -727,35 +474,45 @@ app.post(
           : "";
 
       const result =
-        await complaints.insertOne({
-          userId:
-            new ObjectId(
-              req.user.id
-            ),
+        await complaints.insertOne(
+          {
+            userId:
+              new ObjectId(
+                req.user.id
+              ),
 
-          title:
-            req.body.title,
+            title:
+              req.body.title,
 
-          description:
-            req.body.description,
+            description:
+              req.body
+                .description,
 
-          category:
-            req.body.category ||
-            "Others",
+            category:
+              req.body
+                .category ||
+              "Others",
 
-          location:
-            req.body.location ||
-            "",
+            location:
+              req.body
+                .location ||
+              "",
 
-          image:
-            imagePath,
+            image:
+              imagePath,
 
-          status:
-            "Pending",
+            status:
+              "Pending",
 
-          createdAt:
-            new Date(),
-        });
+            // ✅ OFFICER
+
+            assignedOfficer:
+              "Not Assigned",
+
+            createdAt:
+              new Date(),
+          }
+        );
 
       res.status(201).json({
         msg:
@@ -775,10 +532,6 @@ app.post(
   }
 );
 
-/* ───────────────── OFFICERS ───────────────── */
-
-
- 
 /* ───────────────── MY COMPLAINTS ───────────────── */
 
 app.get(
@@ -786,39 +539,33 @@ app.get(
   protect,
   async (req, res) => {
 
-    try {
-
-      const complaints =
-        await db
-          .collection(
-            "complaints"
-          )
-          .find({
-            userId:
-              new ObjectId(
-                req.user.id
-              ),
-          })
-          .sort({
-            createdAt: -1,
-          })
-          .toArray();
-
-      res.status(200).json(
-        complaints
+    const complaints =
+      db.collection(
+        "complaints"
       );
 
-    } catch (err) {
+    const data =
+      await complaints
 
-      res.status(500).json({
-        msg:
-          err.message,
-      });
-    }
+        .find({
+          userId:
+            new ObjectId(
+              req.user.id
+            ),
+        })
+
+        .sort({
+          createdAt:
+            -1,
+        })
+
+        .toArray();
+
+    res.json(data);
   }
 );
 
-/* ───────────────── ADMIN ALL COMPLAINTS ───────────────── */
+/* ───────────────── ADMIN COMPLAINTS ───────────────── */
 
 app.get(
   "/api/admin/complaints",
@@ -826,76 +573,95 @@ app.get(
   verifyAdmin,
   async (req, res) => {
 
-    try {
-
-      const complaints =
-        db.collection(
-          "complaints"
-        );
-
-      const users =
-        db.collection(
-          "users"
-        );
-
-      const data =
-        await complaints
-          .find()
-          .sort({
-            createdAt: -1,
-          })
-          .toArray();
-
-      const result =
-        await Promise.all(
-
-          data.map(
-            async (c) => {
-
-              const user =
-                await users.findOne({
-                  _id:
-                    c.userId,
-                });
-
-              return {
-                ...c,
-
-                user: {
-                  _id:
-                    user?._id,
-
-                  name:
-                    user?.name,
-
-                  email:
-                    user?.email,
-
-                  status:
-                    user?.status ||
-                    "Active",
-                },
-              };
-            }
-          )
-        );
-
-      res.status(200).json(
-        result
+    const complaints =
+      db.collection(
+        "complaints"
       );
 
-    } catch (err) {
+    const users =
+      db.collection(
+        "users"
+      );
 
-      res.status(500).json({
-        msg:
-          err.message,
-      });
-    }
+    const data =
+      await complaints
+        .find()
+        .toArray();
+
+    const result =
+      await Promise.all(
+
+        data.map(
+          async (c) => {
+
+            const user =
+              await users.findOne(
+                {
+                  _id:
+                    c.userId,
+                }
+              );
+
+            return {
+              ...c,
+
+              user: {
+                _id:
+                  user?._id,
+
+                name:
+                  user?.name,
+
+                email:
+                  user?.email,
+              },
+            };
+          }
+        )
+      );
+
+    res.json(result);
   }
 );
-/* ───────────────── OFFICERS ROUTES ───────────────── */
 
-/* GET ALL OFFICERS */
+/* ───────────────── UPDATE STATUS ───────────────── */
+
+app.put(
+  "/api/admin/update-status/:id",
+  protect,
+  verifyAdmin,
+  async (req, res) => {
+
+    const complaints =
+      db.collection(
+        "complaints"
+      );
+
+    await complaints.updateOne(
+      {
+        _id:
+          new ObjectId(
+            req.params.id
+          ),
+      },
+
+      {
+        $set: {
+          status:
+            req.body
+              .status,
+        },
+      }
+    );
+
+    res.json({
+      msg:
+        "Status updated",
+    });
+  }
+);
+
+/* ───────────────── GET OFFICERS ───────────────── */
 
 app.get(
   "/api/admin/officers",
@@ -906,28 +672,30 @@ app.get(
     try {
 
       const officers =
-        await db
-          .collection("officers")
+        db.collection(
+          "officers"
+        );
+
+      const data =
+        await officers
           .find()
-          .sort({ createdAt: -1 })
           .toArray();
 
-      res.status(200).json(
-        officers
-      );
+      res.json(data);
 
     } catch (err) {
 
       console.log(err);
 
       res.status(500).json({
-        msg: "Failed to fetch officers",
+        msg:
+          "Server Error",
       });
     }
   }
 );
 
-/* ADD OFFICER */
+/* ───────────────── ADD OFFICER ───────────────── */
 
 app.post(
   "/api/admin/officers",
@@ -937,51 +705,106 @@ app.post(
 
     try {
 
-      const {
-        name,
-        email,
-        phone,
-        department,
-        rank,
-      } = req.body;
-
-      if (
-        !name ||
-        !email ||
-        !phone ||
-        !department ||
-        !rank
-      ) {
-        return res.status(400).json({
-          msg: "All fields are required",
-        });
-      }
-
       const officers =
-        db.collection("officers");
+        db.collection(
+          "officers"
+        );
 
-      const existing =
-        await officers.findOne({
-          email,
-        });
-
-      if (existing) {
-        return res.status(400).json({
-          msg: "Officer already exists",
-        });
-      }
-
-      await officers.insertOne({
-        name,
-        email,
-        phone,
-        department,
-        rank,
-        createdAt: new Date(),
-      });
+      const result =
+        await officers.insertOne(
+          req.body
+        );
 
       res.status(201).json({
-        msg: "Officer added successfully",
+        _id:
+          result.insertedId,
+
+        ...req.body,
+      });
+
+    } catch (err) {
+
+      console.log(err);
+
+      res.status(500).json({
+        msg:
+          "Server Error",
+      });
+    }
+  }
+);
+
+/* ───────────────── DELETE OFFICER ───────────────── */
+
+app.delete(
+  "/api/admin/officers/:id",
+  protect,
+  verifyAdmin,
+  async (req, res) => {
+
+    try {
+
+      const officers =
+        db.collection(
+          "officers"
+        );
+
+      await officers.deleteOne(
+        {
+          _id:
+            new ObjectId(
+              req.params.id
+            ),
+        }
+      );
+
+      res.json({
+        msg:
+          "Officer deleted successfully",
+      });
+
+    } catch (err) {
+
+      console.log(err);
+
+      res.status(500).json({
+        msg:
+          "Server Error",
+      });
+    }
+  }
+);
+
+/* ───────────────── ASSIGN OFFICER ───────────────── */
+/* ───────────────── ASSIGN OFFICER ───────────────── */
+
+app.put(
+  "/api/admin/assign/:id",
+  protect,
+  verifyAdmin,
+  async (req, res) => {
+
+    try {
+
+      const complaints =
+        db.collection("complaints");
+
+      await complaints.updateOne(
+        {
+          _id: new ObjectId(
+            req.params.id
+          ),
+        },
+        {
+          $set: {
+            assignedOfficer:
+              req.body.assignedOfficer,
+          },
+        }
+      );
+
+      res.json({
+        msg: "Officer assigned successfully",
       });
 
     } catch (err) {
@@ -995,71 +818,82 @@ app.post(
   }
 );
 
-/* DELETE OFFICER */
+/* ───────────────── OFFICER LOGIN ───────────────── */
 
-app.delete(
-  "/api/admin/officers/:id",
-  protect,
-  verifyAdmin,
+app.post(
+  "/api/officer/login",
   async (req, res) => {
 
     try {
 
-      await db
-        .collection("officers")
-        .deleteOne({
-          _id: new ObjectId(
-            req.params.id
-          ),
-        });
+      const {
+        email,
+        password,
+      } = req.body;
 
-      res.status(200).json({
-        msg: "Officer deleted",
-      });
+      const officers =
+        db.collection(
+          "officers"
+        );
 
-    } catch (err) {
+      const officer =
+        await officers.findOne(
+          { email }
+        );
 
-      console.log(err);
+      if (!officer) {
 
-      res.status(500).json({
-        msg: "Delete failed",
-      });
-    }
-  }
-);
+        return res
+          .status(401)
+          .json({
+            msg:
+              "Invalid email or password",
+          });
+      }
 
-/* ───────────────── UPDATE STATUS ───────────────── */
+      if (
+        password !==
+        officer.password
+      ) {
 
-app.put(
-  "/api/admin/update-status/:id",
-  protect,
-  verifyAdmin,
-  async (req, res) => {
+        return res
+          .status(401)
+          .json({
+            msg:
+              "Invalid email or password",
+          });
+      }
 
-    try {
-
-      await db
-        .collection(
-          "complaints"
-        )
-        .updateOne(
+      const token =
+        jwt.sign(
           {
-            _id:
-              new ObjectId(
-                req.params.id
-              ),
+            id:
+              officer._id.toString(),
+
+            role:
+              "officer",
+
+            name:
+              officer.name,
           },
+
+          process.env
+            .JWT_SECRET ||
+            "secret123",
+
           {
-            $set: {
-              status:
-                req.body.status,
-            },
+            expiresIn:
+              "7d",
           }
         );
 
-      res.status(200).json({
+      res.json({
         msg:
-          "Status updated",
+          "Officer login successful",
+
+        token,
+
+        officer,
       });
 
     } catch (err) {
@@ -1071,136 +905,41 @@ app.put(
     }
   }
 );
-/* ───────────────── LOCATIONS SYSTEM ───────────────── */
 
-// GET ALL LOCATIONS
+/* ───────────────── OFFICER COMPLAINTS ───────────────── */
 
 app.get(
-  "/locations",
+  "/api/officer/complaints",
   protect,
-  verifyAdmin,
   async (req, res) => {
 
-    try {
+    const complaints =
+      db.collection(
+        "complaints"
+      );
 
-      const locations =
-        await db
-          .collection("locations")
-          .find()
-          .sort({ createdAt: -1 })
-          .toArray();
+    const data =
+      await complaints
 
-      res.json(locations);
+        .find({
+          assignedOfficer:
+            req.user.name,
+        })
 
-    } catch (err) {
+        .toArray();
 
-      console.log(err);
-
-      res.status(500).json({
-        msg: "Failed to fetch locations",
-      });
-    }
-  }
-);
-
-// ADD LOCATION
-
-app.post(
-  "/locations",
-  protect,
-  verifyAdmin,
-  async (req, res) => {
-
-    try {
-
-      const {
-        area,
-        city,
-        state,
-        pincode,
-      } = req.body;
-
-      if (
-        !area ||
-        !city
-      ) {
-        return res.status(400).json({
-          msg: "Area and city required",
-        });
-      }
-
-      const result =
-        await db
-          .collection("locations")
-          .insertOne({
-            area,
-            city,
-            state,
-            pincode,
-            createdAt:
-              new Date(),
-          });
-
-      res.status(201).json({
-        msg: "Location added",
-        id: result.insertedId,
-      });
-
-    } catch (err) {
-
-      console.log(err);
-
-      res.status(500).json({
-        msg: "Failed to add location",
-      });
-    }
-  }
-);
-
-// DELETE LOCATION
-
-app.delete(
-  "/locations/:id",
-  protect,
-  verifyAdmin,
-  async (req, res) => {
-
-    try {
-
-      await db
-        .collection("locations")
-        .deleteOne({
-          _id: new ObjectId(
-            req.params.id
-          ),
-        });
-
-      res.json({
-        msg: "Location deleted",
-      });
-
-    } catch (err) {
-
-      console.log(err);
-
-      res.status(500).json({
-        msg: "Delete failed",
-      });
-    }
+    res.json(data);
   }
 );
 
 /* ───────────────── ROOT ───────────────── */
 
-app.get(
-  "/",
-  (req, res) => {
+app.get("/", (req, res) => {
 
-    res.send(
-      "CivicSnap API running ✅"
-    );
-  }
-);
+  res.send(
+    "CivicSnap API running ✅"
+  );
+});
 
 /* ───────────────── SERVER ───────────────── */
 
@@ -1209,6 +948,7 @@ connectDB().then(() => {
   app.listen(
     process.env.PORT ||
       3000,
+
     () => {
 
       console.log(

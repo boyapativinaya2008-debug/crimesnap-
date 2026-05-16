@@ -1,5 +1,3 @@
-// src/pages/AdminDashboard/AdminOfficers.jsx
-
 import {
   useEffect,
   useState,
@@ -9,46 +7,43 @@ import API from "../../api/api";
 
 export default function AdminOfficers() {
 
-  const [officers, setOfficers] =
-    useState([]);
+  const [
+    officers,
+    setOfficers,
+  ] = useState([]);
 
-  const [loading, setLoading] =
-    useState(false);
+  const [
+    form,
+    setForm,
+  ] = useState({
+    name: "",
+    badgeNo: "",
+    rank: "",
+    station: "",
+    phone: "",
+    email: "",
+    password: "",
+  });
 
-  const [form, setForm] =
-    useState({
-      name: "",
-      email: "",
-      phone: "",
-      department: "",
-      rank: "",
-    });
+  const [
+    editingId,
+    setEditingId,
+  ] = useState(null);
 
-  useEffect(() => {
-    fetchOfficers();
-  }, []);
-
-  /* FETCH OFFICERS */
+  /* =========================
+     FETCH OFFICERS
+  ========================= */
 
   const fetchOfficers =
     async () => {
 
       try {
 
-        const token =
-          localStorage.getItem(
-            "token"
-          );
+        // ✅ UPDATED API
 
         const res =
           await API.get(
-            "/api/admin/officers",
-            {
-              headers: {
-                Authorization:
-                  `Bearer ${token}`,
-              },
-            }
+            "/admin/officers"
           );
 
         setOfficers(
@@ -57,27 +52,38 @@ export default function AdminOfficers() {
 
       } catch (err) {
 
-        console.log(err);
-
-        alert(
-          "Failed to fetch officers"
+        console.error(
+          "Fetch officers error:",
+          err
         );
       }
     };
 
-  /* HANDLE CHANGE */
+  useEffect(() => {
 
-  const handleChange =
-    (e) => {
+    fetchOfficers();
 
-      setForm({
-        ...form,
-        [e.target.name]:
-          e.target.value,
-      });
-    };
+  }, []);
 
-  /* ADD OFFICER */
+  /* =========================
+     HANDLE INPUT
+  ========================= */
+
+  const handleChange = (
+    e
+  ) => {
+
+    setForm({
+      ...form,
+
+      [e.target.name]:
+        e.target.value,
+    });
+  };
+
+  /* =========================
+     CREATE / UPDATE
+  ========================= */
 
   const handleSubmit =
     async (e) => {
@@ -86,62 +92,113 @@ export default function AdminOfficers() {
 
       try {
 
-        setLoading(true);
+        if (editingId) {
 
-        const token =
-          localStorage.getItem(
-            "token"
+          // ✅ UPDATE
+
+          await API.put(
+            `/admin/officers/${editingId}`,
+            form
           );
 
-        const res =
+          alert(
+            "Officer updated successfully"
+          );
+
+        } else {
+
+          // ✅ ADD
+
           await API.post(
-            "/api/admin/officers",
-            form,
-            {
-              headers: {
-                Authorization:
-                  `Bearer ${token}`,
-              },
-            }
+            "/admin/officers",
+            form
           );
 
-        alert(
-          res.data.msg
-        );
+          alert(
+            "Officer added successfully"
+          );
+        }
 
         setForm({
           name: "",
-          email: "",
-          phone: "",
-          department: "",
+          badgeNo: "",
           rank: "",
+          station: "",
+          phone: "",
+          email: "",
+          password: "",
         });
+
+        setEditingId(
+          null
+        );
 
         fetchOfficers();
 
       } catch (err) {
 
-        console.log(err);
-
-        alert(
-          err.response?.data?.msg ||
-          "Failed to add officer"
+        console.error(
+          "Submit error:",
+          err
         );
 
-      } finally {
-
-        setLoading(false);
+        alert(
+          err.response?.data
+            ?.message ||
+            "Something went wrong"
+        );
       }
     };
 
-  /* DELETE OFFICER */
+  /* =========================
+     EDIT
+  ========================= */
 
-  const deleteOfficer =
+  const handleEdit = (
+    officer
+  ) => {
+
+    setEditingId(
+      officer._id
+    );
+
+    setForm({
+      name:
+        officer.name || "",
+
+      badgeNo:
+        officer.badgeNo ||
+        "",
+
+      rank:
+        officer.rank || "",
+
+      station:
+        officer.station ||
+        "",
+
+      phone:
+        officer.phone || "",
+
+      email:
+        officer.email || "",
+
+      password:
+        officer.password ||
+        "",
+    });
+  };
+
+  /* =========================
+     DELETE
+  ========================= */
+
+  const handleDelete =
     async (id) => {
 
       const confirmDelete =
         window.confirm(
-          "Delete officer?"
+          "Are you sure you want to delete this officer?"
         );
 
       if (!confirmDelete)
@@ -149,33 +206,27 @@ export default function AdminOfficers() {
 
       try {
 
-        const token =
-          localStorage.getItem(
-            "token"
-          );
+        // ✅ UPDATED API
 
         await API.delete(
-          `/api/admin/officers/${id}`,
-          {
-            headers: {
-              Authorization:
-                `Bearer ${token}`,
-            },
-          }
+          `/admin/officers/${id}`
         );
 
         alert(
-          "Officer deleted"
+          "Officer deleted successfully"
         );
 
         fetchOfficers();
 
       } catch (err) {
 
-        console.log(err);
+        console.error(
+          "Delete error:",
+          err
+        );
 
         alert(
-          "Delete failed"
+          "Failed to delete officer"
         );
       }
     };
@@ -184,53 +235,33 @@ export default function AdminOfficers() {
 
     <div
       style={{
-        padding: "30px",
-        minHeight: "100vh",
-        background:
-          "linear-gradient(135deg,#0f172a,#1e293b,#334155)",
+        padding: "20px",
       }}
     >
 
-      <h1
-        style={{
-          fontSize: "40px",
-          fontWeight: "bold",
-          marginBottom: "30px",
-          color: "#fff",
-          textAlign: "center",
-        }}
-      >
-        👮 Officers Management
-      </h1>
+      <h2>
+        Officers Management
+      </h2>
 
-      {/* ADD OFFICER FORM */}
+      {/* =========================
+         FORM
+      ========================= */}
 
       <form
         onSubmit={
           handleSubmit
         }
         style={{
-          background:
-            "rgba(255,255,255,0.1)",
+          display:
+            "grid",
 
-          backdropFilter:
-            "blur(10px)",
+          gap: "10px",
 
-          padding:
-            "25px",
-
-          borderRadius:
-            "20px",
+          maxWidth:
+            "500px",
 
           marginBottom:
-            "35px",
-
-          display: "grid",
-
-          gap: "15px",
-
-          boxShadow:
-            "0 8px 25px rgba(0,0,0,0.3)",
+            "30px",
         }}
       >
 
@@ -243,45 +274,19 @@ export default function AdminOfficers() {
             handleChange
           }
           required
-          style={inputStyle}
-        />
-
-        <input
-          type="email"
-          name="email"
-          placeholder="Officer Email"
-          value={form.email}
-          onChange={
-            handleChange
-          }
-          required
-          style={inputStyle}
         />
 
         <input
           type="text"
-          name="phone"
-          placeholder="Phone Number"
-          value={form.phone}
-          onChange={
-            handleChange
-          }
-          required
-          style={inputStyle}
-        />
-
-        <input
-          type="text"
-          name="department"
-          placeholder="Department"
+          name="badgeNo"
+          placeholder="Badge Number"
           value={
-            form.department
+            form.badgeNo
           }
           onChange={
             handleChange
           }
           required
-          style={inputStyle}
         />
 
         <input
@@ -293,214 +298,217 @@ export default function AdminOfficers() {
             handleChange
           }
           required
-          style={inputStyle}
+        />
+
+        <input
+          type="text"
+          name="station"
+          placeholder="Station"
+          value={
+            form.station
+          }
+          onChange={
+            handleChange
+          }
+        />
+
+        <input
+          type="text"
+          name="phone"
+          placeholder="Phone"
+          value={form.phone}
+          onChange={
+            handleChange
+          }
+        />
+
+        <input
+          type="email"
+          name="email"
+          placeholder="Email"
+          value={form.email}
+          onChange={
+            handleChange
+          }
+          required
+        />
+
+        {/* ✅ PASSWORD */}
+
+        <input
+          type="text"
+          name="password"
+          placeholder="Password"
+          value={
+            form.password
+          }
+          onChange={
+            handleChange
+          }
+          required
         />
 
         <button
           type="submit"
-          style={
-            buttonStyle
-          }
         >
-          {
-            loading
-              ? "Adding..."
-              : "Add Officer"
-          }
+
+          {editingId
+            ? "Update Officer"
+            : "Add Officer"}
+
         </button>
 
       </form>
 
-      {/* OFFICERS LIST */}
+      {/* =========================
+         TABLE
+      ========================= */}
 
-      <div
-        style={{
-          display: "grid",
-          gap: "20px",
-        }}
+      <table
+        border="1"
+        cellPadding="10"
+        width="100%"
       >
 
-        {officers.length === 0 && (
+        <thead>
 
-          <div
-            style={{
-              color: "#fff",
-              textAlign: "center",
-              fontSize: "20px",
-            }}
-          >
-            No officers found
-          </div>
-        )}
+          <tr>
 
-        {officers.map(
-          (officer) => (
+            <th>
+              Name
+            </th>
 
-            <div
-              key={
-                officer._id
-              }
-              style={{
-                background:
-                  "rgba(255,255,255,0.12)",
+            <th>
+              Badge No
+            </th>
 
-                backdropFilter:
-                  "blur(10px)",
+            <th>
+              Rank
+            </th>
 
-                padding:
-                  "25px",
+            <th>
+              Station
+            </th>
 
-                borderRadius:
-                  "18px",
+            <th>
+              Phone
+            </th>
 
-                color: "#fff",
+            <th>
+              Email
+            </th>
 
-                boxShadow:
-                  "0 8px 20px rgba(0,0,0,0.3)",
-              }}
-            >
+            <th>
+              Actions
+            </th>
 
-              <h2
-                style={{
-                  fontSize:
-                    "26px",
+          </tr>
 
-                  fontWeight:
-                    "700",
+        </thead>
 
-                  marginBottom:
-                    "14px",
-                }}
+        <tbody>
+
+          {officers.length ===
+          0 ? (
+
+            <tr>
+
+              <td
+                colSpan="7"
+                align="center"
               >
-                {
-                  officer.name
-                }
-              </h2>
+                No officers
+                found
+              </td>
 
-              <p>
-                <strong>
-                  Email:
-                </strong>{" "}
-                {
-                  officer.email
-                }
-              </p>
+            </tr>
 
-              <p>
-                <strong>
-                  Phone:
-                </strong>{" "}
-                {
-                  officer.phone
-                }
-              </p>
+          ) : (
 
-              <p>
-                <strong>
-                  Department:
-                </strong>{" "}
-                {
-                  officer.department
-                }
-              </p>
+            officers.map(
+              (
+                officer
+              ) => (
 
-              <p>
-                <strong>
-                  Rank:
-                </strong>{" "}
-                {
-                  officer.rank
-                }
-              </p>
-
-              <button
-                onClick={() =>
-                  deleteOfficer(
+                <tr
+                  key={
                     officer._id
-                  )
-                }
-                style={{
-                  marginTop:
-                    "18px",
+                  }
+                >
 
-                  background:
-                    "#ef4444",
+                  <td>
+                    {
+                      officer.name
+                    }
+                  </td>
 
-                  color: "#fff",
+                  <td>
+                    {
+                      officer.badgeNo
+                    }
+                  </td>
 
-                  border: "none",
+                  <td>
+                    {
+                      officer.rank
+                    }
+                  </td>
 
-                  padding:
-                    "12px 16px",
+                  <td>
+                    {
+                      officer.station
+                    }
+                  </td>
 
-                  borderRadius:
-                    "10px",
+                  <td>
+                    {
+                      officer.phone
+                    }
+                  </td>
 
-                  cursor:
-                    "pointer",
+                  <td>
+                    {
+                      officer.email
+                    }
+                  </td>
 
-                  fontWeight:
-                    "600",
-                }}
-              >
-                Delete Officer
-              </button>
+                  <td>
 
-            </div>
-          )
-        )}
+                    <button
+                      onClick={() =>
+                        handleEdit(
+                          officer
+                        )
+                      }
+                    >
+                      Edit
+                    </button>
 
-      </div>
+                    <button
+                      onClick={() =>
+                        handleDelete(
+                          officer._id
+                        )
+                      }
+                      style={{
+                        marginLeft:
+                          "10px",
+                      }}
+                    >
+                      Delete
+                    </button>
+
+                  </td>
+
+                </tr>
+              )
+            )
+          )}
+
+        </tbody>
+
+      </table>
 
     </div>
   );
 }
-
-const inputStyle = {
-
-  padding:
-    "14px",
-
-  border:
-    "none",
-
-  borderRadius:
-    "10px",
-
-  fontSize:
-    "15px",
-
-  outline:
-    "none",
-
-  background:
-    "rgba(255,255,255,0.9)",
-};
-
-const buttonStyle = {
-
-  background:
-    "#2563eb",
-
-  color: "#fff",
-
-  border: "none",
-
-  padding:
-    "14px",
-
-  borderRadius:
-    "10px",
-
-  cursor:
-    "pointer",
-
-  fontWeight:
-    "700",
-
-  fontSize:
-    "16px",
-
-  transition:
-    "0.3s",
-};
