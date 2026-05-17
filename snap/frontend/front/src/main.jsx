@@ -1,29 +1,37 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
-import App from './App';
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
 
+import App from "./App";
+
+/* TOAST NOTIFICATIONS */
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-ReactDOM.createRoot(document.getElementById('root')).render(
+/* GLOBAL CSS (if you have) */
+import "./index.css";
+
+ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter
       future={{
         v7_startTransition: true,
-        v7_relativeSplatPath: true
+        v7_relativeSplatPath: true,
       }}
     >
       <App />
 
-      {/* ✅ GLOBAL TOAST CONTAINER (IMPORTANT FIX) */}
+      {/* ✅ GLOBAL TOAST CONTAINER (DO NOT REMOVE) */}
       <ToastContainer
         position="top-right"
         autoClose={3000}
         hideProgressBar={false}
+        newestOnTop
         closeOnClick
-        pauseOnHover
+        rtl={false}
+        pauseOnFocusLoss
         draggable
+        pauseOnHover
         theme="light"
       />
     </BrowserRouter>

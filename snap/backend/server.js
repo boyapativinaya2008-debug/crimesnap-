@@ -189,15 +189,6 @@ app.post(
   protect,
   upload.single("image"),
   async (req, res) => {
-    const officers = await db
-      .collection("officers")
-      .find()
-      .sort({ activeCases: 1 })
-      .limit(1)
-      .toArray();
-
-    const best = officers[0];
-
     const complaints = db.collection("complaints");
 
     const result = await complaints.insertOne({
@@ -208,22 +199,14 @@ app.post(
       location: req.body.location || "",
       image: req.file ? `/uploads/${req.file.filename}` : "",
 
-      status: best ? "In Progress" : "Pending",
-
-      assignedOfficer: best ? best.name : "Not Assigned",
-      assignedOfficerId: best ? best._id.toString() : null,
+      // ❌ NO AUTO ASSIGNMENT
+      status: "Pending",
+      assignedOfficer: "Not Assigned",
+      assignedOfficerId: null,
 
       createdAt: new Date(),
     });
 
-    if (best) {
-      await db.collection("officers").updateOne(
-        { _id: best._id },
-        { $inc: { activeCases: 1 } }
-      );
-    }
-
-    // 🔥 SOCKET EVENT
     io.emit("new-complaint", result);
 
     res.json({ msg: "Created", id: result.insertedId });
@@ -333,7 +316,6 @@ app.put("/api/admin/assign/:id", protect, verifyAdmin, async (req, res) => {
 
   res.json({ msg: "Assigned successfully" });
 });
-
 /* ================= ROOT ================= */
 
 app.get("/", (req, res) => {
@@ -343,6 +325,7 @@ app.get("/", (req, res) => {
 /* ================= START SERVER ================= */
 
 connectDB().then(() => {
+   app.use("/api/admin/locations", require("./src/routes/adminLocations")(db));
   server.listen(process.env.PORT || 3000, () => {
     console.log("🚀 Server running with Socket.io");
   });

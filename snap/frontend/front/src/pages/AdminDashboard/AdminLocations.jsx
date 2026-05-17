@@ -1,138 +1,123 @@
-
 import { useEffect, useState } from "react";
 import API from "../../api/api";
-import "../../styles/adminreports.css";
+import "../../styles/adminlocations.css";
 
 export default function AdminLocations() {
   const [locations, setLocations] = useState([]);
+  const [editingId, setEditingId] = useState(null);
 
   const [form, setForm] = useState({
+    stationName: "",
     area: "",
     city: "",
+    district: "",
     state: "Andhra Pradesh",
     pincode: "",
   });
 
+  /* ================= FETCH ================= */
   const fetchLocations = async () => {
-    try {
-      const res = await API.get("/admin/locations");
-      setLocations(res.data);
-    } catch (err) {
-      console.error(err);
-    }
+    const res = await API.get("/admin/locations");
+    setLocations(res.data);
   };
 
   useEffect(() => {
     fetchLocations();
   }, []);
 
+  /* ================= INPUT ================= */
   const handleChange = (e) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  /* ================= SUBMIT (CREATE / UPDATE) ================= */
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    try {
+    if (editingId) {
+      await API.put(`/admin/locations/${editingId}`, form);
+      setEditingId(null);
+    } else {
       await API.post("/admin/locations", form);
-
-      alert("Location Added Successfully");
-
-      setForm({
-        area: "",
-        city: "",
-        state: "Andhra Pradesh",
-        pincode: "",
-      });
-
-      fetchLocations();
-    } catch (err) {
-      console.error(err);
-      alert("Failed to add location");
     }
+
+    setForm({
+      stationName: "",
+      area: "",
+      city: "",
+      district: "",
+      state: "Andhra Pradesh",
+      pincode: "",
+    });
+
+    fetchLocations();
+  };
+
+  /* ================= DELETE ================= */
+  const deleteLocation = async (id) => {
+    if (!window.confirm("Delete this location?")) return;
+
+    await API.delete(`/admin/locations/${id}`);
+    fetchLocations();
+  };
+
+  /* ================= EDIT ================= */
+  const editLocation = (loc) => {
+    setForm(loc);
+    setEditingId(loc._id);
   };
 
   return (
-    <div className="admin-page">
-      <h1>Manage Locations</h1>
+    <div className="admin-locations-page">
 
-      <form
-        onSubmit={handleSubmit}
-        className="add-location-form"
-        style={{
-          marginBottom: "20px",
-          display: "grid",
-          gap: "10px",
-          maxWidth: "400px",
-        }}
-      >
-        <input
-          type="text"
-          name="area"
-          placeholder="Area Name"
-          value={form.area}
-          onChange={handleChange}
-          required
-        />
+      <h1>Locations</h1>
 
-        <input
-          type="text"
-          name="city"
-          placeholder="City"
-          value={form.city}
-          onChange={handleChange}
-          required
-        />
+      {/* FORM */}
+      <form onSubmit={handleSubmit} className="form">
 
-        <input
-          type="text"
-          name="state"
-          placeholder="State"
-          value={form.state}
-          onChange={handleChange}
-          required
-        />
+        <input name="stationName" placeholder="Station Name" value={form.stationName} onChange={handleChange} required />
+        <input name="area" placeholder="Area" value={form.area} onChange={handleChange} required />
+        <input name="city" placeholder="City" value={form.city} onChange={handleChange} required />
+        <input name="district" placeholder="District" value={form.district} onChange={handleChange} required />
+        <input name="state" placeholder="State" value={form.state} onChange={handleChange} required />
+        <input name="pincode" placeholder="Pincode" value={form.pincode} onChange={handleChange} required />
 
-        <input
-          type="text"
-          name="pincode"
-          placeholder="Pincode"
-          value={form.pincode}
-          onChange={handleChange}
-          required
-        />
-
-        <button type="submit" className="add-btn">
-          Add Location
+        <button type="submit">
+          {editingId ? "Update Location" : "Add Location"}
         </button>
       </form>
 
-      <table className="admin-table">
+      {/* TABLE */}
+      <table>
         <thead>
           <tr>
-            <th>#</th>
+            <th>Station</th>
             <th>Area</th>
             <th>City</th>
-            <th>State</th>
+            <th>District</th>
             <th>Pincode</th>
+            <th>Actions</th>
           </tr>
         </thead>
 
         <tbody>
-          {locations.map((location, index) => (
-            <tr key={location._id}>
-              <td>{index + 1}</td>
-              <td>{location.area}</td>
-              <td>{location.city}</td>
-              <td>{location.state}</td>
-              <td>{location.pincode}</td>
+          {locations.map((loc) => (
+            <tr key={loc._id}>
+              <td>{loc.stationName}</td>
+              <td>{loc.area}</td>
+              <td>{loc.city}</td>
+              <td>{loc.district}</td>
+              <td>{loc.pincode}</td>
+
+              <td>
+                <button onClick={() => editLocation(loc)}>Edit</button>
+                <button onClick={() => deleteLocation(loc._id)}>Delete</button>
+              </td>
             </tr>
           ))}
         </tbody>
       </table>
+
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import "../styles/home.css";
-import bg from "../assets/home-bg.jpeg";
+import bg from "../assets/auth-bg.jpeg";
 import logo from "../assets/logo.png";
 
 export default function Home() {
