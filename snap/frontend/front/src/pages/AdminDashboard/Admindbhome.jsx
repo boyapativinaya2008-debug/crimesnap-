@@ -1,5 +1,7 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
+import socket from "../../socket";
+
 import {
   BarChart,
   Bar,
@@ -28,114 +30,91 @@ export default function Admindbhome() {
   const [chartData, setChartData] = useState([]);
   const [categoryData, setCategoryData] = useState([]);
 
+  const fetchDashboardData = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await axios.get(
+        "http://localhost:3000/api/admin/complaints",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const complaints = res.data;
+
+      const uniqueUsers = new Set();
+      const uniqueLocations = new Set();
+      const categoryCount = {};
+
+      complaints.forEach((item) => {
+        if (item.user?.email) {
+          uniqueUsers.add(item.user.email);
+        }
+
+        if (item.location) {
+          uniqueLocations.add(item.location);
+        }
+
+        const category = item.category || "Other";
+        categoryCount[category] = (categoryCount[category] || 0) + 1;
+      });
+
+      setStats({
+        reports: complaints.length,
+        users: uniqueUsers.size,
+        officers: 5,
+        locations: uniqueLocations.size,
+      });
+
+      setChartData([
+        { name: "Reports", value: complaints.length },
+        { name: "Users", value: uniqueUsers.size },
+        { name: "Officers", value: 5 },
+        { name: "Locations", value: uniqueLocations.size },
+      ]);
+
+      const pieData = Object.keys(categoryCount).map((key) => ({
+        name: key,
+        value: categoryCount[key],
+      }));
+
+      setCategoryData(pieData);
+
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
   useEffect(() => {
 
-    const fetchDashboardData = async () => {
+    // INITIAL LOAD (REAL DB)
+    fetchDashboardData();
 
-      try {
-
-        const token = localStorage.getItem("token");
-
-        const res = await axios.get(
-          "http://localhost:3000/api/admin/complaints",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        const complaints = res.data;
-
-        // UNIQUE USERS
-        const uniqueUsers = new Set();
-
-        // UNIQUE LOCATIONS
-        const uniqueLocations = new Set();
-
-        // CATEGORY COUNT
-        const categoryCount = {};
-
-        complaints.forEach((item) => {
-
-          if (item.user?.email) {
-            uniqueUsers.add(item.user.email);
-          }
-
-          if (item.location) {
-            uniqueLocations.add(item.location);
-          }
-
-          const category = item.category || "Other";
-
-          categoryCount[category] =
-            (categoryCount[category] || 0) + 1;
-
-        });
-
-        setStats({
-          reports: complaints.length,
-          users: uniqueUsers.size,
-          officers: 5,
-          locations: uniqueLocations.size,
-        });
-
-        // BAR CHART DATA
-        setChartData([
-          {
-            name: "Reports",
-            value: complaints.length,
-          },
-          {
-            name: "Users",
-            value: uniqueUsers.size,
-          },
-          {
-            name: "Officers",
-            value: 5,
-          },
-          {
-            name: "Locations",
-            value: uniqueLocations.size,
-          },
-        ]);
-
-        // PIE CHART DATA
-        const pieData = Object.keys(categoryCount).map((key) => ({
-          name: key,
-          value: categoryCount[key],
-        }));
-
-        setCategoryData(pieData);
-
-      } catch (err) {
-
-        console.log(err);
-
-      }
+    // LIVE SOCKET UPDATES
+    const handleUpdate = () => {
+      fetchDashboardData();
     };
 
-    fetchDashboardData();
+    socket.on("new-complaint", handleUpdate);
+    socket.on("status-updated", handleUpdate);
+    socket.on("complaint-assigned", handleUpdate);
+
+    return () => {
+      socket.off("new-complaint", handleUpdate);
+      socket.off("status-updated", handleUpdate);
+      socket.off("complaint-assigned", handleUpdate);
+    };
 
   }, []);
 
   const cards = [
-    {
-      title: "Total Reports",
-      value: stats.reports,
-    },
-    {
-      title: "Users",
-      value: stats.users,
-    },
-    {
-      title: "Officers",
-      value: stats.officers,
-    },
-    {
-      title: "Locations",
-      value: stats.locations,
-    },
+    { title: "Total Reports", value: stats.reports },
+    { title: "Users", value: stats.users },
+    { title: "Officers", value: stats.officers },
+    { title: "Locations", value: stats.locations },
   ];
 
   const COLORS = [
@@ -156,18 +135,13 @@ export default function Admindbhome() {
       <div className="dashboard-cards">
 
         {cards.map((card, index) => (
-
           <div className="dashboard-card" key={index}>
-
             <h2>{card.value}</h2>
             <p>{card.title}</p>
-
           </div>
-
         ))}
 
       </div>
-
 
       {/* CHARTS */}
       <div
@@ -179,60 +153,40 @@ export default function Admindbhome() {
         }}
       >
 
-
         {/* BAR CHART */}
-        <div
-          style={{
-            background: "white",
-            padding: "20px",
-            borderRadius: "15px",
-            boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-          }}
-        >
+        <div style={{
+          background: "white",
+          padding: "20px",
+          borderRadius: "15px",
+          boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+        }}>
 
-          <h2 style={{ marginBottom: "20px" }}>
-            System Usage
-          </h2>
+          <h2>System Usage</h2>
 
           <ResponsiveContainer width="100%" height={300}>
-
             <BarChart data={chartData}>
-
               <CartesianGrid strokeDasharray="3 3" />
-
               <XAxis dataKey="name" />
-
               <YAxis />
-
               <Tooltip />
-
               <Bar dataKey="value" fill="#2563eb" />
-
             </BarChart>
-
           </ResponsiveContainer>
 
         </div>
 
-
         {/* PIE CHART */}
-        <div
-          style={{
-            background: "white",
-            padding: "20px",
-            borderRadius: "15px",
-            boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-          }}
-        >
+        <div style={{
+          background: "white",
+          padding: "20px",
+          borderRadius: "15px",
+          boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+        }}>
 
-          <h2 style={{ marginBottom: "20px" }}>
-            Complaint Categories
-          </h2>
+          <h2>Complaint Categories</h2>
 
           <ResponsiveContainer width="100%" height={300}>
-
             <PieChart>
-
               <Pie
                 data={categoryData}
                 cx="50%"
@@ -241,24 +195,17 @@ export default function Admindbhome() {
                 dataKey="value"
                 label
               >
-
                 {categoryData.map((entry, index) => (
-
                   <Cell
-                    key={`cell-${index}`}
+                    key={index}
                     fill={COLORS[index % COLORS.length]}
                   />
-
                 ))}
-
               </Pie>
 
               <Tooltip />
-
               <Legend />
-
             </PieChart>
-
           </ResponsiveContainer>
 
         </div>

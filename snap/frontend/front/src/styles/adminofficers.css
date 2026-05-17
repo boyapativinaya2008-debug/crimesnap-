@@ -1,0 +1,126 @@
+/* ================= GLOBAL ================= */
+.admin-page {
+  padding: 20px;
+  font-family: "Segoe UI", sans-serif;
+  background: #f4f6f9;
+  min-height: 100vh;
+}
+
+.admin-page h1 {
+  margin-bottom: 20px;
+  font-size: 24px;
+  color: #1f2937;
+}
+
+/* ================= FORM ================= */
+.add-location-form {
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+}
+
+.add-location-form input,
+.add-location-form select {
+  padding: 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  transition: 0.2s;
+}
+
+.add-location-form input:focus,
+.add-location-form select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59,130,246,0.2);
+}
+
+/* BUTTON */
+.add-btn {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.2s;
+}
+
+.add-btn:hover {
+  background: #1d4ed8;
+}
+
+/* ================= TABLE ================= */
+.admin-table {
+  width: 100%;
+  margin-top: 25px;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+}
+
+.admin-table thead {
+  background: #111827;
+  color: white;
+}
+
+.admin-table th,
+.admin-table td {
+  padding: 12px 15px;
+  text-align: left;
+  font-size: 14px;
+}
+
+.admin-table tbody tr {
+  border-bottom: 1px solid #e5e7eb;
+  transition: 0.2s;
+}
+
+.admin-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+/* ================= BUTTONS ================= */
+.admin-table button {
+  padding: 6px 10px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: 0.2s;
+}
+
+/* EDIT BUTTON */
+.admin-table button:first-child {
+  background: #10b981;
+  color: white;
+}
+
+.admin-table button:first-child:hover {
+  background: #059669;
+}
+
+/* DELETE BUTTON */
+.admin-table button:last-child {
+  background: #ef4444;
+  color: white;
+}
+
+.admin-table button:last-child:hover {
+  background: #dc2626;
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 768px) {
+  .admin-table {
+    font-size: 12px;
+  }
+
+  .add-location-form {
+    grid-template-columns: 1fr;
+  }
+}

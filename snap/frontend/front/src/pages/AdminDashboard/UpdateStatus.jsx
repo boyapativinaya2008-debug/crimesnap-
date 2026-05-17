@@ -281,9 +281,9 @@ export default function UpdateStatus() {
 
               <th>User</th>
 
-              <th>Title</th>
 
               <th>Category</th>
+              <th>Location</th>
 
               <th>Status</th>
 
@@ -340,12 +340,13 @@ export default function UpdateStatus() {
                     </td>
 
                     <td>
-                      {item.title}
+                      {item.category}
                     </td>
 
                     <td>
                       {
-                        item.category
+                        item.location
+                          
                       }
                     </td>
 

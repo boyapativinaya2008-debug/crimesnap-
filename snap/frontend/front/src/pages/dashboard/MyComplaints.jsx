@@ -1,254 +1,117 @@
-import {
-  useEffect,
-  useState,
-} from "react";
-
-import {
-  useNavigate,
-} from "react-router-dom";
-
+import { useEffect, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import socket from "../../socket";
 
 import "../../styles/mycomplaints.css";
-
 import bg from "../../assets/auth-bg.jpeg";
 
 export default function MyComplaints() {
+  const navigate = useNavigate();
 
-  const navigate =
-    useNavigate();
+  const [complaints, setComplaints] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const [
-    complaints,
-    setComplaints,
-  ] = useState([]);
+  /* ================= FETCH ================= */
+  const fetchComplaints = useCallback(async () => {
+    try {
+      const token = localStorage.getItem("token");
 
-  const [
-    loading,
-    setLoading,
-  ] = useState(true);
+      const res = await axios.get(
+        "http://localhost:3000/api/complaints/my",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-  useEffect(() => {
-
-    fetchComplaints();
-
+      setComplaints(res.data || []);
+    } catch (err) {
+      console.log("FETCH ERROR:", err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const fetchComplaints =
-    async () => {
+  useEffect(() => {
+    fetchComplaints();
 
-      try {
+    /* ================= SOCKET EVENTS ================= */
 
-        const token =
-          localStorage.getItem(
-            "token"
-          );
+    const onUpdate = () => fetchComplaints();
 
-        const res =
-          await axios.get(
-            "http://localhost:3000/api/complaints/my",
-            {
-              headers: {
-                Authorization:
-                  `Bearer ${token}`,
-              },
-            }
-          );
+    socket.on("status-updated", onUpdate);
+    socket.on("complaint-assigned", onUpdate);
+    socket.on("new-complaint", onUpdate);
 
-        console.log(
-          "Complaints:",
-          res.data
-        );
-
-        setComplaints(
-          res.data || []
-        );
-
-        setLoading(false);
-
-      } catch (err) {
-
-        console.log(
-          "FETCH ERROR:",
-          err
-        );
-
-        setLoading(false);
-      }
+    return () => {
+      socket.off("status-updated", onUpdate);
+      socket.off("complaint-assigned", onUpdate);
+      socket.off("new-complaint", onUpdate);
     };
+  }, [fetchComplaints]);
 
-  const openDetails = (
-    item
-  ) => {
-
-    navigate(
-      "/complaint-details",
-      {
-        state: item,
-      }
-    );
+  const openDetails = (item) => {
+    navigate("/complaint-details", { state: item });
   };
 
   return (
-
     <div
       className="mycomplaints-container"
-      style={{
-        backgroundImage:
-          `url(${bg})`,
-      }}
+      style={{ backgroundImage: `url(${bg})` }}
     >
-
       <div className="overlay"></div>
 
       <div className="mycomplaints-box">
+        <h2>📄 My Complaints</h2>
+        <p>View all complaints submitted by you</p>
 
-        <h2>
-          📄 My Complaints
-        </h2>
-
-        <p>
-          View all complaints
-          submitted by you
-        </p>
-
-        {/* ================= HEADER ================= */}
-
+        {/* HEADER */}
         <div className="list-header">
-
-          <span>
-            Title
-          </span>
-
-          <span>
-            Category
-          </span>
-
-          <span>
-            Location
-          </span>
-
-          <span>
-            Status
-          </span>
-
-          <span>
-            Assigned Officer
-          </span>
-
+          <span>Title</span>
+          <span>Category</span>
+          <span>Location</span>
+          <span>Status</span>
+          <span>Assigned Officer</span>
         </div>
 
-        {/* ================= LOADING ================= */}
+        {/* LOADING */}
+        {loading && <p className="center">Loading...</p>}
 
-        {loading && (
-
-          <p
-            style={{
-              marginTop:
-                "20px",
-
-              textAlign:
-                "center",
-            }}
-          >
-            Loading...
-          </p>
-
+        {/* EMPTY */}
+        {!loading && complaints.length === 0 && (
+          <p className="center">No complaints found</p>
         )}
 
-        {/* ================= NO DATA ================= */}
-
+        {/* LIST */}
         {!loading &&
-          complaints.length ===
-            0 && (
+          complaints.map((item) => (
+            <div
+              key={item._id}
+              className="list-row clickable"
 
-            <p
-              style={{
-                marginTop:
-                  "20px",
-
-                textAlign:
-                  "center",
-              }}
             >
-              No complaints
-              found
-            </p>
-          )}
+              <span>{item.title}</span>
+              <span>{item.category}</span>
+              <span>{item.location}</span>
 
-        {/* ================= COMPLAINT LIST ================= */}
-
-        {!loading &&
-          complaints.length >
-            0 &&
-          complaints.map(
-            (item) => (
-
-              <div
-                key={item._id}
-                className="list-row clickable"
-                onClick={() =>
-                  openDetails(
-                    item
-                  )
-                }
+              <span
+                className={`status ${
+                  item.status === "Pending"
+                    ? "pending"
+                    : item.status === "In Progress"
+                    ? "inprogress"
+                    : "resolved"
+                }`}
               >
+                {item.status}
+              </span>
 
-                {/* TITLE */}
-
-                <span>
-                  {item.title}
-                </span>
-
-                {/* CATEGORY */}
-
-                <span>
-                  {
-                    item.category
-                  }
-                </span>
-
-                {/* LOCATION */}
-
-                <span>
-                  {
-                    item.location
-                  }
-                </span>
-
-                {/* STATUS */}
-
-                <span
-                  className={`status ${
-                    item.status ===
-                    "Pending"
-                      ? "pending"
-                      : item.status ===
-                        "In Progress"
-                      ? "inprogress"
-                      : "resolved"
-                  }`}
-                >
-                  {item.status}
-                </span>
-
-                {/* ASSIGNED OFFICER */}
-
-                <span
-                  className="officer-name"
-                >
-
-                  {item.assignedOfficer ||
-                    "Not Assigned"}
-
-                </span>
-
-              </div>
-            )
-          )}
-
+              <span>{item.assignedOfficer || "Not Assigned"}</span>
+            </div>
+          ))}
       </div>
-
     </div>
   );
 }

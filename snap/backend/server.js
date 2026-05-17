@@ -2,958 +2,348 @@ require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
-const dns = require("dns");
 const multer = require("multer");
 const path = require("path");
+const dns = require("dns");
+const http = require("http");
 
-const {
-  MongoClient,
-  ObjectId,
-} = require("mongodb");
+const { Server } = require("socket.io");
+const { MongoClient, ObjectId } = require("mongodb");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
-const bcrypt =
-  require("bcryptjs");
-
-const jwt =
-  require("jsonwebtoken");
-
-dns.setServers([
-  "8.8.8.8",
-  "8.8.4.4",
-]);
+dns.setServers(["8.8.8.8", "8.8.4.4"]);
 
 const app = express();
+const server = http.createServer(app);
 
-/* ───────────────── MIDDLEWARE ───────────────── */
+/* ================= SOCKET.IO ================= */
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+  },
+});
 
-app.use(cors());
+io.on("connection", (socket) => {
+  console.log("⚡ User connected:", socket.id);
 
-app.use(express.json());
-
-app.use(
-  "/uploads",
-  express.static("uploads")
-);
-
-/* ───────────────── FILE UPLOAD ───────────────── */
-
-const storage =
-  multer.diskStorage({
-
-    destination: (
-      req,
-      file,
-      cb
-    ) => {
-
-      cb(
-        null,
-        "uploads/"
-      );
-    },
-
-    filename: (
-      req,
-      file,
-      cb
-    ) => {
-
-      cb(
-        null,
-        Date.now() +
-          path.extname(
-            file.originalname
-          )
-      );
-    },
+  socket.on("disconnect", () => {
+    console.log("❌ User disconnected:", socket.id);
   });
+});
 
-const upload =
-  multer({ storage });
+/* ================= MIDDLEWARE ================= */
+app.use(cors());
+app.use(express.json());
+app.use("/uploads", express.static("uploads"));
 
-/* ───────────────── DB ───────────────── */
+/* ================= FILE UPLOAD ================= */
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, "uploads/"),
+  filename: (req, file, cb) =>
+    cb(null, Date.now() + path.extname(file.originalname)),
+});
 
+const upload = multer({ storage });
+
+/* ================= DB ================= */
 let db;
 
-const connectDB =
-  async () => {
+async function connectDB() {
+  const client = new MongoClient(process.env.MONGO_DB_URI);
+  await client.connect();
+  db = client.db("civicapp");
+  console.log("✅ MongoDB Connected");
+}
 
-    try {
+/* ================= AUTH MIDDLEWARE ================= */
+const protect = (req, res, next) => {
+  const auth = req.headers.authorization;
 
-      const client =
-        new MongoClient(
-          process.env
-            .MONGO_DB_URI
-        );
-
-      await client.connect();
-
-      db =
-        client.db(
-          "civicapp"
-        );
-
-      console.log(
-        "✅ MongoDB Connected"
-      );
-
-    } catch (err) {
-
-      console.log(err);
-
-      process.exit(1);
-    }
-  };
-
-/* ───────────────── AUTH ───────────────── */
-
-const protect = (
-  req,
-  res,
-  next
-) => {
-
-  const authHeader =
-    req.headers
-      .authorization;
-
-  if (
-    !authHeader ||
-    !authHeader.startsWith(
-      "Bearer "
-    )
-  ) {
-
-    return res
-      .status(401)
-      .json({
-        msg:
-          "No token. Access denied.",
-      });
+  if (!auth?.startsWith("Bearer ")) {
+    return res.status(401).json({ msg: "No token" });
   }
 
   try {
-
-    const decoded =
-      jwt.verify(
-        authHeader.split(
-          " "
-        )[1],
-        process.env
-          .JWT_SECRET ||
-          "secret123"
-      );
-
-    req.user = decoded;
-
+    req.user = jwt.verify(
+      auth.split(" ")[1],
+      process.env.JWT_SECRET || "secret123"
+    );
     next();
-
   } catch {
-
-    res.status(401).json({
-      msg:
-        "Invalid or expired token.",
-    });
+    return res.status(401).json({ msg: "Invalid token" });
   }
 };
 
-/* ───────────────── ADMIN ───────────────── */
-
-const verifyAdmin = (
-  req,
-  res,
-  next
-) => {
-
-  if (
-    req.user?.role !==
-    "admin"
-  ) {
-
-    return res
-      .status(403)
-      .json({
-        msg:
-          "Admins only.",
-      });
+const verifyAdmin = (req, res, next) => {
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ msg: "Admins only" });
   }
-
   next();
 };
 
-/* ───────────────── REGISTER ───────────────── */
+/* ================= AUTH ================= */
 
-app.post(
-  "/api/auth/register",
-  async (req, res) => {
+// REGISTER
+app.post("/api/auth/register", async (req, res) => {
+  const users = db.collection("users");
 
-    try {
+  const hash = await bcrypt.hash(req.body.password, 10);
 
-      const {
-        name,
-        email,
-        phone,
-        password,
-        confirmPassword,
-        role,
-      } = req.body;
+  const result = await users.insertOne({
+    name: req.body.name,
+    email: req.body.email.toLowerCase(),
+    password: hash,
+    role: req.body.role === "admin" ? "admin" : "user",
+    status: "Active",
+    createdAt: new Date(),
+  });
 
-      if (
-        !name ||
-        !email ||
-        !password ||
-        !confirmPassword
-      ) {
+  res.json({ msg: "User created", id: result.insertedId });
+});
 
-        return res
-          .status(400)
-          .json({
-            msg:
-              "All required fields must be filled",
-          });
-      }
+// LOGIN
+app.post("/api/auth/login", async (req, res) => {
+  const users = db.collection("users");
 
-      if (
-        password !==
-        confirmPassword
-      ) {
+  const user = await users.findOne({
+    email: req.body.email.toLowerCase(),
+  });
 
-        return res
-          .status(400)
-          .json({
-            msg:
-              "Passwords do not match",
-          });
-      }
+  if (!user) return res.status(400).json({ msg: "Invalid credentials" });
 
-      const users =
-        db.collection(
-          "users"
-        );
+  const ok = await bcrypt.compare(req.body.password, user.password);
+  if (!ok) return res.status(400).json({ msg: "Invalid credentials" });
 
-      const existing =
-        await users.findOne({
-          email:
-            email.toLowerCase(),
-        });
+  const token = jwt.sign(
+    { id: user._id.toString(), role: user.role },
+    process.env.JWT_SECRET || "secret123",
+    { expiresIn: "7d" }
+  );
 
-      if (existing) {
+  res.json({ token, user });
+});
 
-        return res
-          .status(400)
-          .json({
-            msg:
-              "Email already registered",
-          });
-      }
+// PROFILE (FIXED 404 ISSUE)
+app.get("/api/auth/me", protect, async (req, res) => {
+  const user = await db.collection("users").findOne({
+    _id: new ObjectId(req.user.id),
+  });
 
-      const hashedPassword =
-        await bcrypt.hash(
-          password,
-          10
-        );
+  if (!user) return res.status(404).json({ msg: "User not found" });
 
-      const requestedRole =
-        role === "admin"
-          ? "admin"
-          : "user";
+  res.json({
+    id: user._id.toString(),
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    status: user.status,
+  });
+});
 
-      const result =
-        await users.insertOne(
-          {
-            name,
+/* ================= USERS (ADMIN) ================= */
 
-            email:
-              email.toLowerCase(),
+app.get("/api/admin/users", protect, verifyAdmin, async (req, res) => {
+  const users = await db.collection("users").find().toArray();
 
-            phone:
-              phone || "",
+  res.json(
+    users.map((u) => ({
+      id: u._id.toString(),
+      name: u.name,
+      email: u.email,
+      role: u.role,
+      status: u.status,
+    }))
+  );
+});
 
-            password:
-              hashedPassword,
+app.put("/api/admin/users/block/:id", protect, verifyAdmin, async (req, res) => {
+  await db.collection("users").updateOne(
+    { _id: new ObjectId(req.params.id) },
+    { $set: { status: "Blocked" } }
+  );
 
-            role:
-              requestedRole,
+  res.json({ msg: "Blocked" });
+});
 
-            status:
-              "Active",
+app.put("/api/admin/users/unblock/:id", protect, verifyAdmin, async (req, res) => {
+  await db.collection("users").updateOne(
+    { _id: new ObjectId(req.params.id) },
+    { $set: { status: "Active" } }
+  );
 
-            createdAt:
-              new Date(),
-          }
-        );
+  res.json({ msg: "Unblocked" });
+});
 
-      res.status(201).json({
-        msg:
-          "Account created successfully",
+/* ================= OFFICERS ================= */
 
-        user: {
-          id:
-            result.insertedId,
+app.get("/api/admin/officers", protect, verifyAdmin, async (req, res) => {
+  const data = await db.collection("officers").find().toArray();
+  res.json(data);
+});
 
-          name,
-
-          email:
-            email.toLowerCase(),
-
-          role:
-            requestedRole,
-        },
-      });
-
-    } catch (err) {
-
-      console.log(err);
-
-      res.status(500).json({
-        msg:
-          "Server Error",
-      });
-    }
-  }
-);
-
-/* ───────────────── LOGIN ───────────────── */
-
-app.post(
-  "/api/auth/login",
-  async (req, res) => {
-
-    try {
-
-      const {
-        email,
-        password,
-        role,
-      } = req.body;
-
-      const users =
-        db.collection(
-          "users"
-        );
-
-      const user =
-        await users.findOne({
-          email:
-            email.toLowerCase(),
-        });
-
-      if (!user) {
-
-        return res
-          .status(401)
-          .json({
-            msg:
-              "Invalid email or password",
-          });
-      }
-
-      if (
-        user.status ===
-        "Blocked"
-      ) {
-
-        return res
-          .status(403)
-          .json({
-            msg:
-              "Account is blocked by admin",
-          });
-      }
-
-      const requestedRole =
-        role === "admin"
-          ? "admin"
-          : "user";
-
-      if (
-        user.role !==
-        requestedRole
-      ) {
-
-        return res
-          .status(403)
-          .json({
-            msg:
-              `No ${requestedRole} account found`,
-          });
-      }
-
-      const isMatch =
-        await bcrypt.compare(
-          password,
-          user.password
-        );
-
-      if (!isMatch) {
-
-        return res
-          .status(401)
-          .json({
-            msg:
-              "Invalid email or password",
-          });
-      }
-
-      const token =
-        jwt.sign(
-          {
-            id:
-              user._id.toString(),
-
-            role:
-              user.role,
-
-            name:
-              user.name,
-          },
-
-          process.env
-            .JWT_SECRET ||
-            "secret123",
-
-          {
-            expiresIn:
-              "7d",
-          }
-        );
-
-      res.status(200).json({
-        msg:
-          "Login successful",
-
-        token,
-
-        user: {
-          id:
-            user._id,
-
-          name:
-            user.name,
-
-          email:
-            user.email,
-
-          role:
-            user.role,
-        },
-      });
-
-    } catch (err) {
-
-      console.log(err);
-
-      res.status(500).json({
-        msg:
-          "Server Error",
-      });
-    }
-  }
-);
-
-/* ───────────────── CREATE COMPLAINT ───────────────── */
+/* ================= COMPLAINT CREATE ================= */
 
 app.post(
   "/api/complaints",
   protect,
-  upload.single(
-    "image"
-  ),
+  upload.single("image"),
   async (req, res) => {
+    const officers = await db
+      .collection("officers")
+      .find()
+      .sort({ activeCases: 1 })
+      .limit(1)
+      .toArray();
 
-    try {
+    const best = officers[0];
 
-      const complaints =
-        db.collection(
-          "complaints"
-        );
+    const complaints = db.collection("complaints");
 
-      const imagePath =
-        req.file
-          ? `/uploads/${req.file.filename}`
-          : "";
+    const result = await complaints.insertOne({
+      userId: new ObjectId(req.user.id),
+      title: req.body.title,
+      description: req.body.description,
+      category: req.body.category || "Others",
+      location: req.body.location || "",
+      image: req.file ? `/uploads/${req.file.filename}` : "",
 
-      const result =
-        await complaints.insertOne(
-          {
-            userId:
-              new ObjectId(
-                req.user.id
-              ),
+      status: best ? "In Progress" : "Pending",
 
-            title:
-              req.body.title,
+      assignedOfficer: best ? best.name : "Not Assigned",
+      assignedOfficerId: best ? best._id.toString() : null,
 
-            description:
-              req.body
-                .description,
+      createdAt: new Date(),
+    });
 
-            category:
-              req.body
-                .category ||
-              "Others",
-
-            location:
-              req.body
-                .location ||
-              "",
-
-            image:
-              imagePath,
-
-            status:
-              "Pending",
-
-            // ✅ OFFICER
-
-            assignedOfficer:
-              "Not Assigned",
-
-            createdAt:
-              new Date(),
-          }
-        );
-
-      res.status(201).json({
-        msg:
-          "Complaint submitted",
-
-        id:
-          result.insertedId,
-      });
-
-    } catch (err) {
-
-      res.status(500).json({
-        msg:
-          err.message,
-      });
+    if (best) {
+      await db.collection("officers").updateOne(
+        { _id: best._id },
+        { $inc: { activeCases: 1 } }
+      );
     }
+
+    // 🔥 SOCKET EVENT
+    io.emit("new-complaint", result);
+
+    res.json({ msg: "Created", id: result.insertedId });
   }
 );
 
-/* ───────────────── MY COMPLAINTS ───────────────── */
+/* ================= USER COMPLAINTS ================= */
 
-app.get(
-  "/api/complaints/my",
-  protect,
-  async (req, res) => {
+app.get("/api/complaints/my", protect, async (req, res) => {
+  const data = await db
+    .collection("complaints")
+    .find({ userId: new ObjectId(req.user.id) })
+    .toArray();
 
-    const complaints =
-      db.collection(
-        "complaints"
-      );
+  res.json(data);
+});
 
-    const data =
-      await complaints
+/* ================= ADMIN COMPLAINTS ================= */
 
-        .find({
-          userId:
-            new ObjectId(
-              req.user.id
-            ),
-        })
+app.get("/api/admin/complaints", protect, verifyAdmin, async (req, res) => {
+  const complaints = await db.collection("complaints").find().toArray();
+  const users = await db.collection("users").find().toArray();
 
-        .sort({
-          createdAt:
-            -1,
-        })
+  const map = {};
+  users.forEach((u) => (map[u._id.toString()] = u));
 
-        .toArray();
+  res.json(
+    complaints.map((c) => ({
+      ...c,
+      user: map[c.userId?.toString()] || null,
+    }))
+  );
+});
 
-    res.json(data);
-  }
-);
-
-/* ───────────────── ADMIN COMPLAINTS ───────────────── */
-
-app.get(
-  "/api/admin/complaints",
-  protect,
-  verifyAdmin,
-  async (req, res) => {
-
-    const complaints =
-      db.collection(
-        "complaints"
-      );
-
-    const users =
-      db.collection(
-        "users"
-      );
-
-    const data =
-      await complaints
-        .find()
-        .toArray();
-
-    const result =
-      await Promise.all(
-
-        data.map(
-          async (c) => {
-
-            const user =
-              await users.findOne(
-                {
-                  _id:
-                    c.userId,
-                }
-              );
-
-            return {
-              ...c,
-
-              user: {
-                _id:
-                  user?._id,
-
-                name:
-                  user?.name,
-
-                email:
-                  user?.email,
-              },
-            };
-          }
-        )
-      );
-
-    res.json(result);
-  }
-);
-
-/* ───────────────── UPDATE STATUS ───────────────── */
+/* ================= STATUS UPDATE (ONLY 3 STATES) ================= */
 
 app.put(
   "/api/admin/update-status/:id",
   protect,
   verifyAdmin,
   async (req, res) => {
+    const allowed = ["Pending", "In Progress", "Resolved"];
 
-    const complaints =
-      db.collection(
-        "complaints"
-      );
+    if (!allowed.includes(req.body.status)) {
+      return res.status(400).json({ msg: "Invalid status" });
+    }
 
-    await complaints.updateOne(
-      {
-        _id:
-          new ObjectId(
-            req.params.id
-          ),
-      },
-
-      {
-        $set: {
-          status:
-            req.body
-              .status,
-        },
-      }
+    const updated = await db.collection("complaints").updateOne(
+      { _id: new ObjectId(req.params.id) },
+      { $set: { status: req.body.status } }
     );
 
-    res.json({
-      msg:
-        "Status updated",
+    io.emit("status-updated", {
+      id: req.params.id,
+      status: req.body.status,
     });
+
+    res.json({ msg: "Updated" });
   }
 );
 
-/* ───────────────── GET OFFICERS ───────────────── */
+/* ================= ASSIGN OFFICER ================= */
 
-app.get(
-  "/api/admin/officers",
-  protect,
-  verifyAdmin,
-  async (req, res) => {
+app.put("/api/admin/assign/:id", protect, verifyAdmin, async (req, res) => {
+  const complaints = db.collection("complaints");
+  const officers = db.collection("officers");
 
-    try {
+  const c = await complaints.findOne({
+    _id: new ObjectId(req.params.id),
+  });
 
-      const officers =
-        db.collection(
-          "officers"
-        );
+  const newOfficer = await officers.findOne({
+    name: req.body.assignedOfficer,
+  });
 
-      const data =
-        await officers
-          .find()
-          .toArray();
+  if (!c || !newOfficer) {
+    return res.status(404).json({ msg: "Not found" });
+  }
 
-      res.json(data);
+  if (c.assignedOfficerId) {
+    await db.collection("officers").updateOne(
+      { _id: new ObjectId(c.assignedOfficerId), activeCases: { $gt: 0 } },
+      { $inc: { activeCases: -1 } }
+    );
+  }
 
-    } catch (err) {
-
-      console.log(err);
-
-      res.status(500).json({
-        msg:
-          "Server Error",
-      });
+  await complaints.updateOne(
+    { _id: c._id },
+    {
+      $set: {
+        assignedOfficer: newOfficer.name,
+        assignedOfficerId: newOfficer._id.toString(),
+        status: "In Progress",
+      },
     }
-  }
-);
-
-/* ───────────────── ADD OFFICER ───────────────── */
-
-app.post(
-  "/api/admin/officers",
-  protect,
-  verifyAdmin,
-  async (req, res) => {
-
-    try {
-
-      const officers =
-        db.collection(
-          "officers"
-        );
-
-      const result =
-        await officers.insertOne(
-          req.body
-        );
-
-      res.status(201).json({
-        _id:
-          result.insertedId,
-
-        ...req.body,
-      });
-
-    } catch (err) {
-
-      console.log(err);
-
-      res.status(500).json({
-        msg:
-          "Server Error",
-      });
-    }
-  }
-);
-
-/* ───────────────── DELETE OFFICER ───────────────── */
-
-app.delete(
-  "/api/admin/officers/:id",
-  protect,
-  verifyAdmin,
-  async (req, res) => {
-
-    try {
-
-      const officers =
-        db.collection(
-          "officers"
-        );
-
-      await officers.deleteOne(
-        {
-          _id:
-            new ObjectId(
-              req.params.id
-            ),
-        }
-      );
-
-      res.json({
-        msg:
-          "Officer deleted successfully",
-      });
-
-    } catch (err) {
-
-      console.log(err);
-
-      res.status(500).json({
-        msg:
-          "Server Error",
-      });
-    }
-  }
-);
-
-/* ───────────────── ASSIGN OFFICER ───────────────── */
-/* ───────────────── ASSIGN OFFICER ───────────────── */
-
-app.put(
-  "/api/admin/assign/:id",
-  protect,
-  verifyAdmin,
-  async (req, res) => {
-
-    try {
-
-      const complaints =
-        db.collection("complaints");
-
-      await complaints.updateOne(
-        {
-          _id: new ObjectId(
-            req.params.id
-          ),
-        },
-        {
-          $set: {
-            assignedOfficer:
-              req.body.assignedOfficer,
-          },
-        }
-      );
-
-      res.json({
-        msg: "Officer assigned successfully",
-      });
-
-    } catch (err) {
-
-      console.log(err);
-
-      res.status(500).json({
-        msg: "Server Error",
-      });
-    }
-  }
-);
-
-/* ───────────────── OFFICER LOGIN ───────────────── */
-
-app.post(
-  "/api/officer/login",
-  async (req, res) => {
-
-    try {
-
-      const {
-        email,
-        password,
-      } = req.body;
-
-      const officers =
-        db.collection(
-          "officers"
-        );
-
-      const officer =
-        await officers.findOne(
-          { email }
-        );
-
-      if (!officer) {
-
-        return res
-          .status(401)
-          .json({
-            msg:
-              "Invalid email or password",
-          });
-      }
-
-      if (
-        password !==
-        officer.password
-      ) {
-
-        return res
-          .status(401)
-          .json({
-            msg:
-              "Invalid email or password",
-          });
-      }
-
-      const token =
-        jwt.sign(
-          {
-            id:
-              officer._id.toString(),
-
-            role:
-              "officer",
-
-            name:
-              officer.name,
-          },
-
-          process.env
-            .JWT_SECRET ||
-            "secret123",
-
-          {
-            expiresIn:
-              "7d",
-          }
-        );
-
-      res.json({
-        msg:
-          "Officer login successful",
-
-        token,
-
-        officer,
-      });
-
-    } catch (err) {
-
-      res.status(500).json({
-        msg:
-          err.message,
-      });
-    }
-  }
-);
-
-/* ───────────────── OFFICER COMPLAINTS ───────────────── */
-
-app.get(
-  "/api/officer/complaints",
-  protect,
-  async (req, res) => {
-
-    const complaints =
-      db.collection(
-        "complaints"
-      );
-
-    const data =
-      await complaints
-
-        .find({
-          assignedOfficer:
-            req.user.name,
-        })
-
-        .toArray();
-
-    res.json(data);
-  }
-);
-
-/* ───────────────── ROOT ───────────────── */
-
-app.get("/", (req, res) => {
-
-  res.send(
-    "CivicSnap API running ✅"
   );
+
+  await db.collection("officers").updateOne(
+    { _id: newOfficer._id },
+    { $inc: { activeCases: 1 } }
+  );
+
+  io.emit("complaint-assigned", {
+    id: req.params.id,
+    officer: newOfficer.name,
+  });
+
+  res.json({ msg: "Assigned successfully" });
 });
 
-/* ───────────────── SERVER ───────────────── */
+/* ================= ROOT ================= */
+
+app.get("/", (req, res) => {
+  res.send("Civic App API Running 🚀");
+});
+
+/* ================= START SERVER ================= */
 
 connectDB().then(() => {
-
-  app.listen(
-    process.env.PORT ||
-      3000,
-
-    () => {
-
-      console.log(
-        "🚀 Server running"
-      );
-    }
-  );
+  server.listen(process.env.PORT || 3000, () => {
+    console.log("🚀 Server running with Socket.io");
+  });
 });
