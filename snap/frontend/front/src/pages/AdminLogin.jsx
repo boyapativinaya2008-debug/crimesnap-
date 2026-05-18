@@ -42,13 +42,13 @@ export default function AdminLogin() {
               <path d="M16 4L6 10V22L16 28L26 22V10L16 4Z" stroke="white" strokeWidth="2" fill="none"/>
               <circle cx="16" cy="16" r="4" fill="white"/>
             </svg>
-            <span>CivicSnap</span>
+            <span>CrimeSnap</span>
           </div>
           <p className="admin-brand-sub">Admin Panel</p>
         </div>
         <div className="admin-auth-hero">
           <h1>Manage. Monitor.<br/>Make a Difference.</h1>
-          <p>The CivicSnap admin panel gives you full control over civic reports, officers, departments, and community announcements across your city.</p>
+          <p>The CrimeSnap admin panel gives you full control over crime reports, officers, departments, and community announcements across your city.</p>
           <div className="admin-stats-row">
             <div className="admin-stat-pill">
               <span className="stat-num">1,248</span>

@@ -1,109 +1,313 @@
+/* =========================
+   ADMIN LOCATIONS PAGE
+========================= */
+
 .admin-locations-page {
-  padding: 30px;
-  background: #f4f7fb;
-  min-height: 100vh;
-}
-
-.locations-header h1 {
-  font-size: 36px;
-  color: #081028;
-}
-
-.locations-header p {
-  color: #64748b;
-  margin-top: 6px;
-}
-
-.stats-grid {
-  margin: 25px 0;
-}
-
-.stat-card {
-  background: white;
-  padding: 24px;
-  border-radius: 18px;
-  width: 220px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-}
-
-.stat-card h2 {
-  font-size: 34px;
-  color: #2563eb;
-}
-
-.location-form-card,
-.locations-table-card {
-  background: white;
-  border-radius: 20px;
-  padding: 24px;
-  margin-top: 25px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-}
-
-.add-location-form {
-  display: grid;
-  grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
-  gap: 16px;
-  margin-top: 20px;
-}
-
-.add-location-form input {
-  padding: 14px;
-  border: 1px solid #dbe2ea;
-  border-radius: 12px;
-}
-
-.add-location-form button {
-  background: #2563eb;
-  color: white;
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  font-weight: 600;
-}
-
-.table-top {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 20px;
-}
-
-.table-top input {
-  padding: 12px;
-  width: 280px;
-  border-radius: 10px;
-  border: 1px solid #dbe2ea;
-}
-
-.admin-table {
   width: 100%;
+  min-height: 100vh;
+
+  padding: 30px;
+
+  background: #f1f5f9;
+}
+
+/* =========================
+   PAGE TITLE
+========================= */
+
+.admin-locations-page h1 {
+  font-size: 34px;
+  font-weight: 700;
+
+  color: #0f172a;
+
+  margin-bottom: 28px;
+}
+
+/* =========================
+   FORM
+========================= */
+
+.form {
+  background: white;
+
+  padding: 28px;
+
+  border-radius: 22px;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(auto-fit, minmax(220px, 1fr));
+
+  gap: 18px;
+
+  margin-bottom: 35px;
+
+  box-shadow:
+    0 4px 14px rgba(0,0,0,0.06);
+}
+
+/* =========================
+   INPUTS
+========================= */
+
+.form input {
+  width: 100%;
+
+  padding: 14px 16px;
+
+  border: 1px solid #dbe2ea;
+
+  border-radius: 12px;
+
+  outline: none;
+
+  font-size: 14px;
+
+  background: #f8fafc;
+
+  transition: 0.3s ease;
+}
+
+.form input:focus {
+  border-color: #2563eb;
+
+  background: white;
+
+  box-shadow:
+    0 0 0 3px rgba(37,99,235,0.12);
+}
+
+/* =========================
+   BUTTON
+========================= */
+
+.form button {
+  padding: 14px;
+
+  border: none;
+
+  border-radius: 12px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #2563eb,
+      #00b4ff
+    );
+
+  color: white;
+
+  font-size: 15px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: 0.3s ease;
+}
+
+.form button:hover {
+  transform: translateY(-2px);
+
+  opacity: 0.95;
+}
+
+/* =========================
+   TABLE WRAPPER
+========================= */
+
+.table-wrapper {
+  background: white;
+
+  border-radius: 22px;
+
+  overflow-x: auto;
+
+  box-shadow:
+    0 4px 14px rgba(0,0,0,0.06);
+}
+
+/* =========================
+   TABLE
+========================= */
+
+table {
+  width: 100%;
+
   border-collapse: collapse;
 }
 
-.admin-table thead {
-  background: #081028;
+/* =========================
+   TABLE HEAD
+========================= */
+
+thead {
+  background: #0f172a;
+}
+
+thead th {
   color: white;
-}
 
-.admin-table th,
-.admin-table td {
-  padding: 16px;
+  padding: 18px 16px;
+
   text-align: left;
+
+  font-size: 14px;
+
+  font-weight: 600;
 }
 
-.admin-table tbody tr {
+/* =========================
+   TABLE BODY
+========================= */
+
+tbody tr {
   border-bottom: 1px solid #eef2f7;
+
+  transition: 0.2s ease;
 }
 
-.admin-table tbody tr:hover {
+tbody tr:hover {
   background: #f8fbff;
 }
 
-.delete-btn {
-  background: crimson;
-  color: white;
+tbody td {
+  padding: 16px;
+
+  font-size: 14px;
+
+  color: #334155;
+}
+
+/* =========================
+   ACTION BUTTONS
+========================= */
+
+tbody td button {
   border: none;
-  padding: 10px 14px;
-  border-radius: 8px;
+
+  padding: 8px 14px;
+
+  border-radius: 10px;
+
+  font-size: 13px;
+
+  font-weight: 600;
+
   cursor: pointer;
+
+  margin-right: 8px;
+
+  transition: 0.3s ease;
+}
+
+/* EDIT BUTTON */
+
+tbody td button:first-child {
+  background: #dbeafe;
+
+  color: #2563eb;
+}
+
+tbody td button:first-child:hover {
+  background: #2563eb;
+
+  color: white;
+}
+
+/* DELETE BUTTON */
+
+tbody td button:last-child {
+  background: #fee2e2;
+
+  color: #dc2626;
+}
+
+tbody td button:last-child:hover {
+  background: #dc2626;
+
+  color: white;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 992px) {
+
+  .admin-locations-page {
+    padding: 24px;
+  }
+
+  .admin-locations-page h1 {
+    font-size: 30px;
+  }
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 768px) {
+
+  .admin-locations-page {
+    padding: 18px;
+  }
+
+  .admin-locations-page h1 {
+    font-size: 26px;
+
+    margin-bottom: 22px;
+  }
+
+  .form {
+    grid-template-columns: 1fr;
+
+    padding: 20px;
+
+    border-radius: 18px;
+  }
+
+  .form input {
+    padding: 13px 14px;
+  }
+
+  .form button {
+    width: 100%;
+  }
+
+  thead th,
+  tbody td {
+    padding: 12px;
+
+    font-size: 13px;
+  }
+
+  tbody td button {
+    padding: 7px 10px;
+
+    font-size: 12px;
+
+    margin-bottom: 5px;
+  }
+}
+
+/* =========================
+   SMALL MOBILE
+========================= */
+
+@media (max-width: 480px) {
+
+  .admin-locations-page {
+    padding: 14px;
+  }
+
+  .form {
+    padding: 16px;
+  }
+
+  .admin-locations-page h1 {
+    font-size: 22px;
+  }
 }

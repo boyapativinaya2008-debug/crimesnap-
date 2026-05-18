@@ -1,99 +1,291 @@
-:root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #ffffff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px,
-    rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
-
-  --sans: system-ui, "Segoe UI", Roboto, sans-serif;
-  --heading: system-ui, "Segoe UI", Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
-
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-
-  color: var(--text);
-  background: var(--bg);
-
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* DARK MODE ONLY */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-  }
-}
-
-/* RESET */
+/* =========================
+   RESET
+========================= */
 * {
+  margin: 0;
+  padding: 0;
   box-sizing: border-box;
+  font-family: "Segoe UI", sans-serif;
 }
 
 body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
+  background: #000;
+  overflow-x: hidden;
 }
 
-/* ROOT CONTAINER */
-#root {
-  width: 1126px;
-  margin: 0 auto;
+/* =========================
+   MAIN CONTAINER
+========================= */
+.register-container {
+  width: 100%;
   min-height: 100vh;
   display: flex;
-  flex-direction: column;
-  border-inline: 1px solid var(--border);
 }
 
-/* HEADINGS */
-h1,
-h2 {
-  font-family: var(--heading);
-  color: var(--text-h);
-  font-weight: 500;
+/* =========================
+   LEFT PANEL
+========================= */
+.left-panel {
+  flex: 1.2;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 60px;
+
+  background:
+    linear-gradient(
+      rgba(0, 0, 0, 0.65),
+      rgba(0, 0, 0, 0.75)
+    ),
+    url("../assets/crime-bg.jpg");
+
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
 }
 
-h1 {
-  font-size: 56px;
-  margin: 32px 0;
+/* CONTENT */
+.left-content {
+  max-width: 520px;
+  z-index: 2;
+  color: white;
 }
 
-h2 {
-  font-size: 24px;
-  margin: 0 0 8px;
+.left-content img {
+  width: 90px;
+  margin-bottom: 25px;
 }
 
-/* TEXT */
-p {
-  margin: 0;
+.left-content h1 {
+  font-size: 58px;
+  line-height: 1.2;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: #fff;
 }
 
-/* CODE */
-code {
-  font-family: var(--mono);
+.left-content h1 span {
+  color: #f7b733;
+}
+
+.left-content p {
+  font-size: 18px;
+  line-height: 1.8;
+  color: #dddddd;
+}
+
+/* =========================
+   RIGHT PANEL
+========================= */
+.right-panel {
+  flex: 0.8;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+
+  background: #0a0a0a;
+}
+
+/* =========================
+   REGISTER BOX
+========================= */
+.register-box {
+  width: 100%;
+  max-width: 430px;
+
+  padding: 40px;
+  border-radius: 24px;
+
+  background: rgba(255, 255, 255, 0.08);
+
+  backdrop-filter: blur(14px);
+
+  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+/* TITLE */
+.register-box h2 {
+  text-align: center;
+  color: white;
+  font-size: 34px;
+  margin-bottom: 30px;
+}
+
+/* =========================
+   INPUT GROUP
+========================= */
+.input-group {
+  position: relative;
+  margin-bottom: 22px;
+}
+
+.input-group i {
+  position: absolute;
+  left: 16px;
+  top: 16px;
+  color: #f7b733;
+  font-size: 16px;
+}
+
+.input-group input {
+  width: 100%;
+  height: 52px;
+
+  border: 1px solid #444;
+  border-radius: 12px;
+
+  background: rgba(255, 255, 255, 0.08);
+
+  padding-left: 48px;
+  padding-right: 15px;
+
+  color: white;
   font-size: 15px;
-  padding: 4px 8px;
-  border-radius: 4px;
-  background: var(--code-bg);
-  color: var(--text-h);
+
+  outline: none;
+
+  transition: 0.3s;
 }
 
-/* IMAGES */
-img {
-  max-width: 100%;
-  display: block;
+.input-group input:focus {
+  border-color: #f7b733;
+  box-shadow: 0 0 10px rgba(247, 183, 51, 0.3);
+}
+
+.input-group input::placeholder {
+  color: #cccccc;
+}
+
+/* =========================
+   BUTTON
+========================= */
+.register-btn {
+  width: 100%;
+  height: 52px;
+
+  border: none;
+  border-radius: 12px;
+
+  background: linear-gradient(
+    135deg,
+    #f7b733,
+    #fc4a1a
+  );
+
+  color: white;
+  font-size: 17px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: 0.3s;
+}
+
+.register-btn:hover {
+  transform: translateY(-2px);
+  opacity: 0.95;
+}
+
+/* =========================
+   LOGIN TEXT
+========================= */
+.login-text {
+  margin-top: 22px;
+  text-align: center;
+  color: #d5d5d5;
+  font-size: 15px;
+}
+
+.login-text a {
+  color: #f7b733;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+/* =========================
+   TABLET RESPONSIVE
+========================= */
+@media (max-width: 992px) {
+
+  .register-container {
+    flex-direction: column;
+  }
+
+  .left-panel {
+    min-height: 380px;
+    padding: 40px;
+  }
+
+  .right-panel {
+    width: 100%;
+    padding: 40px 20px;
+  }
+
+  .left-content {
+    text-align: center;
+  }
+
+  .left-content h1 {
+    font-size: 42px;
+  }
+
+  .left-content p {
+    font-size: 16px;
+  }
+}
+
+/* =========================
+   MOBILE RESPONSIVE
+========================= */
+@media (max-width: 576px) {
+
+  .left-panel {
+    min-height: 320px;
+    padding: 25px;
+  }
+
+  .left-content img {
+    width: 70px;
+  }
+
+  .left-content h1 {
+    font-size: 32px;
+  }
+
+  .left-content p {
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .right-panel {
+    padding: 20px;
+  }
+
+  .register-box {
+    padding: 28px 22px;
+    border-radius: 18px;
+  }
+
+  .register-box h2 {
+    font-size: 28px;
+  }
+
+  .input-group input {
+    height: 48px;
+    font-size: 14px;
+  }
+
+  .register-btn {
+    height: 48px;
+    font-size: 15px;
+  }
+
+  .login-text {
+    font-size: 14px;
+  }
 }

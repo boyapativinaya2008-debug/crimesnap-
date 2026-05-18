@@ -1,50 +1,120 @@
 import { Outlet, useNavigate } from "react-router-dom";
+import { useState } from "react";
+
 import logo from "../../assets/logo.png";
+
 import "../../styles/dashboard.css";
 import "../../styles/sidebar.css";
 
 export default function DashboardLayout() {
+
   const navigate = useNavigate();
-  // LOGOUT FUNCTION
+
+  // MOBILE SIDEBAR
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // LOGOUT
   const handleLogout = () => {
-    localStorage.clear(); // optional
+
+    localStorage.clear();
+
     navigate("/");
   };
+
   return (
-    <div style={{ display: "flex", height: "100vh" }}>
+
+    <div className="dashboard-layout">
+
+      {/* MOBILE MENU BUTTON */}
+      <button
+        className="menu-toggle"
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+      >
+        ☰
+      </button>
+
       {/* SIDEBAR */}
-      <div className="sidebar">
+      <div
+        className={`sidebar ${sidebarOpen ? "active" : ""}`}
+      >
+
         {/* LOGO */}
         <div className="brand">
-          <img src={logo} alt="Logo" />
+
+          <img
+            src={logo}
+            alt="Logo"
+          />
+
           <span>CrimeSnap</span>
+
         </div>
+
         {/* MENU */}
         <div className="menu">
-          <button onClick={() => navigate("/dashboard")}>
+
+          <button
+            onClick={() => {
+              navigate("/dashboard");
+              setSidebarOpen(false);
+            }}
+          >
             🏠 Home
           </button>
-          <button onClick={() => navigate("/dashboard/report")}>
+
+          <button
+            onClick={() => {
+              navigate("/dashboard/report");
+              setSidebarOpen(false);
+            }}
+          >
             📢 Report
           </button>
-          <button onClick={() => navigate("/dashboard/my-complaints")}>
+
+          <button
+            onClick={() => {
+              navigate("/dashboard/my-complaints");
+              setSidebarOpen(false);
+            }}
+          >
             📄 My Complaints
           </button>
-          <button onClick={() => navigate("/dashboard/profile")}>
+
+          <button
+            onClick={() => {
+              navigate("/dashboard/profile");
+              setSidebarOpen(false);
+            }}
+          >
             👤 Profile
           </button>
-          <button onClick={() => navigate("/dashboard/track-status")}>
+
+          <button
+            onClick={() => {
+              navigate("/dashboard/track-status");
+              setSidebarOpen(false);
+            }}
+          >
             📊 Track Status
           </button>
+
           {/* LOGOUT */}
-          <button className="logout" onClick={handleLogout}>
+          <button
+            className="logout"
+            onClick={handleLogout}
+          >
             🔓 Logout
           </button>
+
         </div>
+
       </div>
-      {/* RIGHT SIDE */}
-      <div style={{ flex: 1, padding: "20px" }}>
+
+      {/* MAIN CONTENT */}
+      <div className="dashboard-main">
+
         <Outlet />
+
       </div>
 
     </div>
